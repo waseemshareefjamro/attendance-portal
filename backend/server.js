@@ -9,7 +9,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*', // Allow all origins for simplicity (or configure specific frontend URL)
+    credentials: true
+}));
 app.use(express.json());
 
 // Database Connection
@@ -22,10 +25,17 @@ app.use('/api/instructors', require('./routes/instructors'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/attendance', require('./routes/attendance'));
 
+// Root Route for health check
 app.get('/', (req, res) => {
-    res.send('API is running...');
+    res.send('Attendance System API is running');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Start Server (Only for local development)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
+
+// Export for Vercel
+module.exports = app;
