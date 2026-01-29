@@ -1,125 +1,133 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../services/api';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-    // State for students registry (Global List)
-    // Structure: { StudentID, Name, Password }
-    const [students, setStudents] = useState(() => {
-        const saved = localStorage.getItem('students');
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    // State for enrollments (Mapping Students <-> Classes)
-    // Structure: { studentId, classId }
-    const [enrollments, setEnrollments] = useState(() => {
-        const saved = localStorage.getItem('enrollments');
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    // State for attendance records
-    // Structure: { id, studentId, date, status, time, classId, ... }
-    const [attendance, setAttendance] = useState(() => {
-        const saved = localStorage.getItem('attendance');
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    // State for classes
-    const [classes, setClasses] = useState(() => {
-        const saved = localStorage.getItem('classes');
-        const parsed = saved ? JSON.parse(saved) : [];
-        // Migration check: if old data (strings), convert to objects
-        if (parsed.length > 0 && typeof parsed[0] === 'string') {
-            return parsed.map(c => ({ id: c, name: c, instructorId: '' }));
-        }
-        return parsed;
-    });
-
-    // State for Instructors
-    const [instructors, setInstructors] = useState(() => {
-        const saved = localStorage.getItem('instructors');
-        return saved ? JSON.parse(saved) : [{ username: 'instr1', password: 'password', name: 'Default Instructor' }];
-    });
-
+    // State
+    const [students, setStudents] = useState([]);
+    const [enrollments, setEnrollments] = useState([]);
+    const [attendance, setAttendance] = useState([]);
+    const [classes, setClasses] = useState([]);
+    const [instructors, setInstructors] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Persistence
-    useEffect(() => { localStorage.setItem('students', JSON.stringify(students)); }, [students]);
-    useEffect(() => { localStorage.setItem('enrollments', JSON.stringify(enrollments)); }, [enrollments]);
-    useEffect(() => { localStorage.setItem('instructors', JSON.stringify(instructors)); }, [instructors]);
-    useEffect(() => { localStorage.setItem('attendance', JSON.stringify(attendance)); }, [attendance]);
-    useEffect(() => { localStorage.setItem('classes', JSON.stringify(classes)); }, [classes]);
+    // Initial Data Fetch
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [studentsData, enrollmentsData, attendanceData, classesData, instructorsData] = await Promise.all([
+                api.get('/api/students'),
+                api.get('/api/courses/enrollments'),
+                api.get('/api/attendance'),
+                api.get('/api/courses'),
+                api.get('/api/instructors')
+            ]);
+
+            setStudents(studentsData);
+            setEnrollments(enrollmentsData);
+            setAttendance(attendanceData);
+            setClasses(classesData);
+            setInstructors(instructorsData);
+        } catch (error) {
+            console.error("Failed to fetch initial data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     // --- Actions ---
 
     // 1. Registry Management (Super Admin)
-    const addStudent = (student) => {
-        // Enforce uniqueness
-        if (students.find(s => s.StudentID === student.StudentID)) return false;
-        setStudents(prev => [...prev, student]);
-        return true;
-    };
-
-    const addStudentsBulk = (newStudents) => {
-        setStudents(prev => {
-            const existingIds = new Set(prev.map(s => s.StudentID));
-            const filtered = newStudents.filter(s => !existingIds.has(s.StudentID));
-            return [...prev, ...filtered];
-        });
-    };
-
-    const updateStudent = (oldId, updatedData) => {
-        const newId = updatedData.StudentID || oldId;
-
-        // If ID changed, check uniqueness
-        if (newId !== oldId && students.find(s => s.StudentID === newId)) {
-            return false; // ID collision
+    const addStudent = async (student) => {
+        try {
+            const newStudent = await api.post('/api/students', student);
+            setStudents(prev => [...prev, newStudent]);
+            return true;
+        } catch (error) {
+            alert(error.message);
+            return false;
         }
-
-        setStudents(prev => prev.map(student =>
-            student.StudentID === oldId ? { ...student, ...updatedData, StudentID: newId } : student
-        ));
-
-        // Cascade ID update if needed
-        if (newId !== oldId) {
-            setEnrollments(prev => prev.map(e => e.studentId === oldId ? { ...e, studentId: newId } : e));
-            setAttendance(prev => prev.map(a => a.studentId === oldId ? { ...a, studentId: newId } : a));
-        }
-        return true;
     };
 
-    const removeStudentRaw = (id) => { // Removes from registry completely
-        setStudents(prev => prev.filter(student => student.StudentID !== id));
-        setEnrollments(prev => prev.filter(e => e.studentId !== id));
-        setAttendance(prev => prev.filter(a => a.studentId !== id));
+    const addStudentsBulk = async (newStudents) => {
+        try {
+            const result = await api.post('/api/students/bulk', newStudents);
+            // Re-fetch or simplistic merge if result is full list (it's result object usually)
+            // Assuming result is inserted items or success message. 
+            // Safest to refetch or assume strict append if backend returns them.
+            // Backend returns result object from insertMany.
+            await fetchData();
+            return true;
+        } catch (error) {
+            alert(error.message);
+            return false;
+        }
+    };
+
+    const updateStudent = async (oldId, updatedData) => {
+        try {
+            const updated = await api.put(`/api/students/${oldId}`, updatedData);
+            // Updating local state complex due to ID changes potentially affecting other lists
+            // Simplest strategy: Refetch to ensure cascades (enrollments etc) are reflected
+            await fetchData();
+            return true;
+        } catch (error) {
+            alert(error.message);
+            return false;
+        }
+    };
+
+    const removeStudentRaw = async (id) => {
+        try {
+            await api.delete(`/api/students/${id}`);
+            // Optimistic update
+            setStudents(prev => prev.filter(student => student.studentID !== id));
+            setEnrollments(prev => prev.filter(e => e.studentId !== id));
+            setAttendance(prev => prev.filter(a => a.studentId !== id));
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     };
 
     // 2. Enrollment Management (Instructors)
-    const enrollStudent = (studentId, classId) => {
-        // Check if student exists in registry
-        const studentExists = students.some(s => s.StudentID === studentId);
-        if (!studentExists) return false;
-
-        // Check if already enrolled
-        const isEnrolled = enrollments.some(e => e.studentId === studentId && e.classId === classId);
-        if (isEnrolled) return true; // Already done
-
-        setEnrollments(prev => [...prev, { studentId, classId }]);
-        return true;
+    const enrollStudent = async (studentId, classId) => {
+        try {
+            const newEnrollment = await api.post('/api/courses/enroll', { studentId, classId });
+            setEnrollments(prev => [...prev, newEnrollment]);
+            return true;
+        } catch (error) {
+            console.error(error); // Likely "Already enrolled"
+            return false;
+        }
     };
 
-    const unenrollStudent = (studentId, classId) => {
-        setEnrollments(prev => prev.filter(e => !(e.studentId === studentId && e.classId === classId)));
+    const unenrollStudent = async (studentId, classId) => {
+        try {
+            await api.post('/api/courses/unenroll', { studentId, classId });
+            setEnrollments(prev => prev.filter(e => !(e.studentId === studentId && e.classId === classId)));
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     };
 
-    // 3. Helpers
+    // 3. Helpers (Synchronous filters on current state)
     const getStudentsByClass = (classId) => {
         const targetClassId = String(classId).toLowerCase();
         const enrolledIds = enrollments
             .filter(e => String(e.classId).toLowerCase() === targetClassId)
             .map(e => String(e.studentId).toLowerCase());
 
-        return students.filter(s => enrolledIds.includes(String(s.StudentID).toLowerCase()));
+        return students.filter(s => enrolledIds.includes(String(s.studentID).toLowerCase()));
     };
 
     const getClassesByStudent = (studentId) => {
@@ -130,20 +138,38 @@ export const AppProvider = ({ children }) => {
     };
 
     // 4. Other Actions
-    const markAttendance = (record) => {
-        setAttendance(prev => [...prev, record]);
+    const markAttendance = async (record) => {
+        try {
+            const savedRecord = await api.post('/api/attendance', record);
+            setAttendance(prev => [...prev, savedRecord]);
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     };
 
     // Course Management (Super Admin)
-    const addCourse = (course) => {
-        // course: { id, name, instructorId }
-        if (classes.find(c => c.id === course.id)) return false;
-        setClasses(prev => [...prev, course]);
-        return true;
+    const addCourse = async (course) => {
+        try {
+            const newCourse = await api.post('/api/courses', course);
+            setClasses(prev => [...prev, newCourse]);
+            return true;
+        } catch (error) {
+            alert(error.message);
+            return false;
+        }
     };
 
-    const removeCourse = (courseId) => {
-        setClasses(prev => prev.filter(c => c.id !== courseId));
+    const removeCourse = async (courseId) => {
+        try {
+            await api.delete(`/api/courses/${courseId}`);
+            setClasses(prev => prev.filter(c => c.id !== courseId));
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     };
 
     const addClass = (className) => {
@@ -151,30 +177,37 @@ export const AppProvider = ({ children }) => {
     };
 
     // Instructor Management
-    const addInstructor = (username, password, name) => {
-        if (!instructors.find(i => i.username === username)) {
-            setInstructors(prev => [...prev, { username, password, name }]);
+    const addInstructor = async (username, password, name) => {
+        try {
+            const newInstructor = await api.post('/api/instructors', { username, password, name });
+            setInstructors(prev => [...prev, newInstructor]);
             return true;
-        }
-        return false;
-    };
-
-    const updateInstructor = (oldUsername, newData) => {
-        const newUsername = newData.username || oldUsername;
-
-        // If Username changed, check uniqueness
-        if (newUsername !== oldUsername && instructors.find(i => i.username === newUsername)) {
+        } catch (error) {
+            alert(error.message);
             return false;
         }
-
-        setInstructors(prev => prev.map(i =>
-            i.username === oldUsername ? { ...i, ...newData, username: newUsername } : i
-        ));
-        return true;
     };
 
-    const removeInstructor = (username) => {
-        setInstructors(prev => prev.filter(i => i.username !== username));
+    const updateInstructor = async (oldUsername, newData) => {
+        try {
+            const updated = await api.put(`/api/instructors/${oldUsername}`, newData);
+            setInstructors(prev => prev.map(i => i.username === oldUsername ? updated : i));
+            return true;
+        } catch (error) {
+            alert(error.message);
+            return false;
+        }
+    };
+
+    const removeInstructor = async (username) => {
+        try {
+            await api.delete(`/api/instructors/${username}`);
+            setInstructors(prev => prev.filter(i => i.username !== username));
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     };
 
     // Credential Helpers
@@ -188,30 +221,34 @@ export const AppProvider = ({ children }) => {
     };
 
     // Login Logic
-    const loginStudent = (studentId, password) => {
-        const student = students.find(s => s.StudentID === studentId);
-        if (student && student.Password === password) {
-            setCurrentUser({ role: 'student', data: student });
+    const loginStudent = async (studentId, password) => {
+        try {
+            const response = await api.post('/api/auth/login/student', { studentId, password });
+            setCurrentUser(response);
             return true;
+        } catch (error) {
+            return false;
         }
-        return false;
     };
 
-    const loginInstructor = (username, password) => {
-        const instructor = instructors.find(i => i.username === username && i.password === password);
-        if (instructor) {
-            setCurrentUser({ role: 'instructor', data: instructor });
+    const loginInstructor = async (username, password) => {
+        try {
+            const response = await api.post('/api/auth/login/instructor', { username, password });
+            setCurrentUser(response);
             return true;
+        } catch (error) {
+            return false;
         }
-        return false;
     };
 
-    const loginSuperAdmin = (username, password) => {
-        if (username === 'admin' && password === 'admin123') {
-            setCurrentUser({ role: 'super_admin', data: { name: 'Super Admin' } });
+    const loginSuperAdmin = async (username, password) => {
+        try {
+            const response = await api.post('/api/auth/login/admin', { username, password });
+            setCurrentUser(response);
             return true;
+        } catch (error) {
+            return false;
         }
-        return false;
     };
 
     const logout = () => {
@@ -220,7 +257,7 @@ export const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{
-            students, enrollments, attendance, classes, instructors, currentUser,
+            students, enrollments, attendance, classes, instructors, currentUser, loading,
             addStudent, addStudentsBulk, updateStudent, removeStudentRaw,
             enrollStudent, unenrollStudent, getStudentsByClass, getClassesByStudent,
             markAttendance, addClass, addCourse, removeCourse, addInstructor, updateInstructor, removeInstructor,
