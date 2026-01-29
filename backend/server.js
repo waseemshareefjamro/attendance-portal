@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const mongoose = require('mongoose');
 
 dotenv.config();
 
@@ -28,6 +29,22 @@ app.use('/api/attendance', require('./routes/attendance'));
 // Root Route for health check
 app.get('/', (req, res) => {
     res.send('Attendance System API is running');
+});
+
+// Health Check Route
+app.get('/api/health', (req, res) => {
+    const dbStatus = mongoose.connection.readyState;
+    const statusMap = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting'
+    };
+
+    res.json({
+        server: 'running',
+        database: statusMap[dbStatus] || 'unknown'
+    });
 });
 
 // Start Server (Only for local development)

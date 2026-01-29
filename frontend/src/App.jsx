@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './contexts/AppContext';
 import Navbar from './components/Navbar';
+import ServerStatus from './components/common/ServerStatus';
 
 // Login Pages
 import InstructorLogin from './pages/Instructor/InstructorLogin';
@@ -42,6 +43,7 @@ function App() {
       <Router>
         <div className="min-h-screen text-white/90">
           <Navbar />
+          <ServerStatus />
           <main className="mx-auto max-w-7xl px-4 pb-12">
             <Routes>
               {/* Public / Selector */}

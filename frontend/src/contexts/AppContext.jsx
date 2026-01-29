@@ -13,9 +13,29 @@ export const AppProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const [serverStatus, setServerStatus] = useState(null);
+
     // Initial Data Fetch
+    const checkServerHealth = async () => {
+        try {
+            const status = await api.get('/api/health');
+            setServerStatus(status);
+            return true;
+        } catch (error) {
+            setServerStatus({ server: 'down', database: 'unknown' });
+            return false;
+        }
+    };
+
     const fetchData = async () => {
         setLoading(true);
+        const isHealthy = await checkServerHealth();
+
+        if (!isHealthy) {
+            setLoading(false);
+            return;
+        }
+
         try {
             const [studentsData, enrollmentsData, attendanceData, classesData, instructorsData] = await Promise.all([
                 api.get('/api/students'),
@@ -39,6 +59,9 @@ export const AppProvider = ({ children }) => {
 
     useEffect(() => {
         fetchData();
+        // Poll health every 30 seconds
+        const interval = setInterval(checkServerHealth, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     // --- Actions ---
@@ -257,7 +280,7 @@ export const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{
-            students, enrollments, attendance, classes, instructors, currentUser, loading,
+            students, enrollments, attendance, classes, instructors, currentUser, loading, serverStatus,
             addStudent, addStudentsBulk, updateStudent, removeStudentRaw,
             enrollStudent, unenrollStudent, getStudentsByClass, getClassesByStudent,
             markAttendance, addClass, addCourse, removeCourse, addInstructor, updateInstructor, removeInstructor,

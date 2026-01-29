@@ -55,9 +55,6 @@ const SuperAdminLogin = () => {
                     >
                         Access Control
                     </button>
-                    <div className="text-center text-xs text-gray-500">
-                        Default: admin / admin123
-                    </div>
                 </form>
             </div>
         </div>
