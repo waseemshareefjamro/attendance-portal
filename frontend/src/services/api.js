@@ -1,4 +1,12 @@
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://attendance-portal-uvqj.vercel.app');
+const getBaseUrl = () => {
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl && !envUrl.includes('localhost')) {
+        return envUrl;
+    }
+    return window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://attendance-portal-uvqj.vercel.app';
+};
+
+const API_URL = getBaseUrl();
 
 const getHeaders = () => ({
     'Content-Type': 'application/json',
