@@ -9,9 +9,10 @@ const InstructorLogin = () => {
     const { loginInstructor } = useApp();
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (loginInstructor(username, password)) {
+        const success = await loginInstructor(username, password);
+        if (success) {
             navigate('/instructor/dashboard');
         } else {
             setError('Invalid username or password');

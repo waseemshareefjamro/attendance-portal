@@ -9,9 +9,10 @@ const SuperAdminLogin = () => {
     const { loginSuperAdmin } = useApp();
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (loginSuperAdmin(username, password)) {
+        const success = await loginSuperAdmin(username, password);
+        if (success) {
             navigate('/super-admin/dashboard');
         } else {
             setError('Invalid super admin credentials');

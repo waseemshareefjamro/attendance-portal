@@ -37,7 +37,7 @@ router.post('/login/instructor', async (req, res) => {
 // Super Admin Login (Environment or Hardcoded for now, as per plan)
 router.post('/login/admin', (req, res) => {
     const { username, password } = req.body;
-    if (username === 'admin' && password === 'admin123') {
+    if (username === 'waseemshareef' && password === 'Waseem$123') {
         res.json({ role: 'super_admin', data: { name: 'Super Admin' } });
     } else {
         res.status(401).json({ message: 'Invalid Admin credentials' });

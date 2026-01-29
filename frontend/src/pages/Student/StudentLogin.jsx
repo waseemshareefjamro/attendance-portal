@@ -9,9 +9,10 @@ const StudentLogin = () => {
     const { loginStudent } = useApp();
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (loginStudent(studentId, password)) {
+        const success = await loginStudent(studentId, password);
+        if (success) {
             navigate('/student/dashboard');
         } else {
             setError('Invalid ID or Password');
