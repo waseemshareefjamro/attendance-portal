@@ -1,12 +1,7 @@
-const getBaseUrl = () => {
-    const envUrl = import.meta.env.VITE_API_URL;
-    if (envUrl && !envUrl.includes('localhost')) {
-        return envUrl;
-    }
-    return window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://attendance-portal-uvqj.vercel.app';
-};
-
-const API_URL = getBaseUrl();
+// Hardcoded for reliability during debugging
+const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:5000'
+    : 'https://attendance-portal-uvqj.vercel.app';
 
 const getHeaders = () => ({
     'Content-Type': 'application/json',
@@ -25,6 +20,7 @@ export const api = {
         const response = await fetch(`${API_URL}${endpoint}`, {
             method: 'GET',
             headers: getHeaders(),
+            credentials: 'include' // Important for CORS with credentials
         });
         return handleResponse(response);
     },
@@ -34,6 +30,7 @@ export const api = {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify(body),
+            credentials: 'include'
         });
         return handleResponse(response);
     },
@@ -43,6 +40,7 @@ export const api = {
             method: 'PUT',
             headers: getHeaders(),
             body: JSON.stringify(body),
+            credentials: 'include'
         });
         return handleResponse(response);
     },
@@ -51,6 +49,7 @@ export const api = {
         const response = await fetch(`${API_URL}${endpoint}`, {
             method: 'DELETE',
             headers: getHeaders(),
+            credentials: 'include'
         });
         return handleResponse(response);
     }
