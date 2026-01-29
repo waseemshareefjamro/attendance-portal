@@ -19,7 +19,7 @@ const Navbar = () => {
             <div className="mx-auto flex max-w-7xl items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="bg-gradient-to-tr from-blue-400 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
-                        AttendanceSystem
+                        Attendance
                     </div>
                 </div>
 

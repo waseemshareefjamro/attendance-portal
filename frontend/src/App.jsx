@@ -111,7 +111,7 @@ const HomeSelector = () => {
     <div className="flex h-[80vh] flex-col items-center justify-center gap-8">
       <div className="text-center">
         <h1 className="mb-4 text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-          Attendance System
+          Institute Portal
         </h1>
         <p className="text-xl text-gray-400">Select your portal to continue</p>
       </div>
