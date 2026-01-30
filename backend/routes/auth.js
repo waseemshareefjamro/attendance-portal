@@ -7,7 +7,12 @@ const Instructor = require('../models_sheets/Instructor');
 router.post('/login/student', async (req, res) => {
     const { studentId, password } = req.body;
     try {
-        const student = await Student.findOne({ studentID: studentId });
+        // Case-insensitive lookup
+        const students = await Student.find({}); // Get all (efficient enough for sheets)
+        const student = students.find(s =>
+            String(s.StudentID).trim().toLowerCase() === String(studentId).trim().toLowerCase()
+        );
+
         if (student && student.password === password) {
             // In production, use JWT here
             res.json({ role: 'student', data: student });

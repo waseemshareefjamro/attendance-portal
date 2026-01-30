@@ -24,77 +24,22 @@ class StudentModel {
             Name: data.name,
             StudentID: data.studentID || data.studentid,
             Password: data.password,
+            password: data.password, // Explicitly expose lowercase for auth
             Gender: data.gender,
-            ...data // include other fields just in case
-        };
-    }
-
-    // Transform Frontend (Capitalized) to internal (lowercase)
-    static toBackend(data) {
-        return {
-            name: data.Name || data.name,
-            studentID: data.StudentID || data.studentID || data.studentid,
-            password: data.Password || data.password,
-            gender: data.Gender || data.gender,
+            class: data.class || data.Class,
             ...data
         };
     }
 
-    // Find one
-    static async findOne(query) {
-        const rows = await this.find(query); // find now returns Frontend format
-        // But wait, if we return Frontend format, our internal logic (updateRow) might fail if it relies on lowercase?
-        // updateRow uses `studentID`.
-        // If we return { StudentID: '...' }, we need to be careful.
-        // Let's decide: Model returns Frontend format. Internal methods adapt.
-        return rows.length > 0 ? rows[0] : null;
-    }
+    // ... (toBackend is fine)
 
-    // Constructor to mimic Mongoose instance
-    constructor(data) {
-        // Normalize incoming data to backend format (lowercase) for storage
-        this.data = StudentModel.toBackend(data);
-    }
-
-    // Save (Create)
-    async save() {
-        // Check for uniqueness if needed, but for now just append
-        // appendRow expects lowercase keys because of our googleSheets.js headers
-        const saved = await appendRow(TAB_NAME, this.data);
-        return StudentModel.toFrontend(saved); // Return Frontend format
-    }
-
-    // Static create
-    static async create(data) {
-        const instance = new StudentModel(data);
-        return await instance.save();
-    }
-
-    // Insert Many
-    static async insertMany(dataArray, options) {
-        const results = [];
-        for (const data of dataArray) {
-            const saved = await appendRow(TAB_NAME, data);
-            results.push(saved);
-        }
-        return results;
-    }
-
-    // Find by ID and Update purely for Mongoose compatibility
-    // Our 'id' in routes is often the studentID string, NOT the mongo _id
-    static async findOneAndDelete(query) {
-        // Query usually { studentID: '...' }
-        if (!query.studentID) throw new Error("Delete requires studentID");
-        await deleteRow(TAB_NAME, 'studentID', query.studentID);
-        return true;
-    }
-
-    // Custom method to mimic findOne -> save pattern
-    // In our route: const student = await findOne... student.name = ... student.save()
-    // We need to return an object that HAS a save() method that UPDATES.
+    // ...
 
     static async findOneWithUpdateCapability(query) {
-        const data = await this.findOne(query);
+        // Fix Recursion: Call find() instead of findOne()
+        const rows = await this.find(query);
+        const data = rows.length > 0 ? rows[0] : null;
+
         if (!data) return null;
 
         // Return object decorated with save method
