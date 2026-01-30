@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
-const mongoose = require('mongoose');
+// const connectDB = require('./config/db'); // Removed for Sheets migration
+// const mongoose = require('mongoose');
 
 dotenv.config();
 
@@ -29,7 +29,7 @@ app.use(cors({
 app.use(express.json());
 
 // Database Connection
-connectDB();
+// connectDB(); // Removed
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -40,23 +40,43 @@ app.use('/api/attendance', require('./routes/attendance'));
 
 // Root Route for health check
 app.get('/', (req, res) => {
-    res.send('Attendance System API is running');
+    res.send('Attendance System API is running (Google Sheets Backend)');
 });
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
-    const dbStatus = mongoose.connection.readyState;
-    const statusMap = {
-        0: 'disconnected',
-        1: 'connected',
-        2: 'connecting',
-        3: 'disconnecting'
-    };
-
     res.json({
         server: 'running',
-        database: statusMap[dbStatus] || 'unknown'
+        database: 'active'
     });
+});
+
+// Detailed Debug Route (User requested this to find exact error)
+app.get('/api/debug-connection', async (req, res) => {
+    const debugInfo = {
+        env: {
+            SPREADSHEET_ID_EXISTS: !!process.env.SPREADSHEET_ID,
+            GOOGLE_CREDENTIALS_EXISTS: !!process.env.GOOGLE_CREDENTIALS,
+            // Don't show full potential secrets, just length or partial
+            CREDENTIALS_LENGTH: process.env.GOOGLE_CREDENTIALS ? process.env.GOOGLE_CREDENTIALS.length : 0
+        },
+        connection: 'pending',
+        error: null
+    };
+
+    try {
+        const { getSheetRows } = require('./config/googleSheets');
+        // Try to fetch one row from 'Students'
+        const rows = await getSheetRows('Students');
+        debugInfo.connection = 'success';
+        debugInfo.rowsFound = rows.length;
+        res.json(debugInfo);
+    } catch (err) {
+        debugInfo.connection = 'failed';
+        debugInfo.error = err.message;
+        debugInfo.stack = err.stack;
+        res.status(500).json(debugInfo);
+    }
 });
 
 // Start Server (Only for local development)
