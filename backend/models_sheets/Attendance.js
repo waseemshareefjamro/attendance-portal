@@ -67,6 +67,22 @@ class AttendanceModel {
         };
         await updateMatchingRows(TAB_NAME, filterFn, updateDoc);
     }
+
+    static async insertMany(dataArray) {
+        const results = [];
+        // Loop through and append. 
+        // Note: Google Sheets API has value.append that can take multiple rows at once.
+        // Our appendRow helper might only take one, but let's see.
+        // The appendRow helper takes `rowData` object.
+        // We can optimize this by creating a bulkAppend helper later, but for now, 
+        // to ensure reliability, we just loop await.
+        for (const data of dataArray) {
+            const instance = new AttendanceModel(data);
+            const saved = await instance.save();
+            results.push(saved);
+        }
+        return results;
+    }
 }
 
 module.exports = AttendanceModel;

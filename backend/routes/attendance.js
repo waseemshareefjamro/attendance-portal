@@ -12,11 +12,11 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Mark Attendance
+// Mark Attendance (Single)
 router.post('/', async (req, res) => {
     const { studentId, classId, className, date, status, timestamp } = req.body;
     try {
-        const record = new Attendance({
+        const record = await Attendance.create({
             studentId,
             classId,
             className,
@@ -24,8 +24,21 @@ router.post('/', async (req, res) => {
             status,
             timestamp
         });
-        await record.save();
         res.status(201).json(record);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Bulk Attendance
+router.post('/bulk', async (req, res) => {
+    const records = req.body; // Array of records
+    if (!Array.isArray(records)) {
+        return res.status(400).json({ message: "Expected array of records" });
+    }
+    try {
+        const results = await Attendance.insertMany(records);
+        res.status(201).json(results);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }

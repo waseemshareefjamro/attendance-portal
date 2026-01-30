@@ -97,7 +97,7 @@ const AttendanceManager = () => {
         }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!selectedClassId) return;
 
         const records = classStudents.map(student => ({
@@ -112,8 +112,10 @@ const AttendanceManager = () => {
             timestamp: new Date().toISOString()
         }));
 
-        records.forEach(r => markAttendance(r));
-        alert('Attendance saved successfully!');
+        const success = await markAttendanceBulk(records);
+        if (success) {
+            alert('Attendance saved successfully!');
+        }
     };
 
     const handleExport = () => {

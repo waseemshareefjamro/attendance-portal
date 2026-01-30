@@ -163,6 +163,18 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    const markAttendanceBulk = async (records) => {
+        try {
+            await api.post('/api/attendance/bulk', records);
+            await fetchData();
+            return true;
+        } catch (error) {
+            console.error(error);
+            alert("Failed to save some records: " + error.message);
+            return false;
+        }
+    };
+
     // Course Management (Super Admin)
     const addCourse = async (course) => {
         try {
@@ -274,7 +286,7 @@ export const AppProvider = ({ children }) => {
             students, enrollments, attendance, classes, instructors, currentUser, loading, serverStatus,
             addStudent, addStudentsBulk, updateStudent, removeStudentRaw,
             enrollStudent, unenrollStudent, getStudentsByClass, getClassesByStudent,
-            markAttendance, addClass, addCourse, removeCourse, addInstructor, updateInstructor, removeInstructor,
+            markAttendance, markAttendanceBulk, addClass, addCourse, removeCourse, addInstructor, updateInstructor, removeInstructor,
             loginStudent, loginInstructor, loginSuperAdmin, logout,
             generateCredential, generateStudentId
         }}>
