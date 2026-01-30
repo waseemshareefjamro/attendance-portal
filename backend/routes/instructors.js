@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Instructor = require('../models/Instructor');
+const Instructor = require('../models_sheets/Instructor');
 
 // Get all instructors
 router.get('/', async (req, res) => {

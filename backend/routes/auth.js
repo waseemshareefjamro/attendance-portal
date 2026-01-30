@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Student = require('../models/Student');
-const Instructor = require('../models/Instructor');
+const Student = require('../models_sheets/Student');
+const Instructor = require('../models_sheets/Instructor');
 
 // Student Login
 router.post('/login/student', async (req, res) => {
