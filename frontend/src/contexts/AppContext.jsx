@@ -69,8 +69,8 @@ export const AppProvider = ({ children }) => {
     // 1. Registry Management (Super Admin)
     const addStudent = async (student) => {
         try {
-            const newStudent = await api.post('/api/students', student);
-            setStudents(prev => [...prev, newStudent]);
+            await api.post('/api/students', student);
+            await fetchData();
             return true;
         } catch (error) {
             alert(error.message);
@@ -80,11 +80,7 @@ export const AppProvider = ({ children }) => {
 
     const addStudentsBulk = async (newStudents) => {
         try {
-            const result = await api.post('/api/students/bulk', newStudents);
-            // Re-fetch or simplistic merge if result is full list (it's result object usually)
-            // Assuming result is inserted items or success message. 
-            // Safest to refetch or assume strict append if backend returns them.
-            // Backend returns result object from insertMany.
+            await api.post('/api/students/bulk', newStudents);
             await fetchData();
             return true;
         } catch (error) {
@@ -95,9 +91,7 @@ export const AppProvider = ({ children }) => {
 
     const updateStudent = async (oldId, updatedData) => {
         try {
-            const updated = await api.put(`/api/students/${oldId}`, updatedData);
-            // Updating local state complex due to ID changes potentially affecting other lists
-            // Simplest strategy: Refetch to ensure cascades (enrollments etc) are reflected
+            await api.put(`/api/students/${oldId}`, updatedData);
             await fetchData();
             return true;
         } catch (error) {
@@ -109,10 +103,7 @@ export const AppProvider = ({ children }) => {
     const removeStudentRaw = async (id) => {
         try {
             await api.delete(`/api/students/${id}`);
-            // Optimistic update
-            setStudents(prev => prev.filter(student => (student.StudentID || student.studentID) !== id));
-            setEnrollments(prev => prev.filter(e => e.studentId !== id));
-            setAttendance(prev => prev.filter(a => a.studentId !== id));
+            await fetchData();
             return true;
         } catch (error) {
             console.error(error);
@@ -123,8 +114,8 @@ export const AppProvider = ({ children }) => {
     // 2. Enrollment Management (Instructors)
     const enrollStudent = async (studentId, classId) => {
         try {
-            const newEnrollment = await api.post('/api/courses/enroll', { studentId, classId });
-            setEnrollments(prev => [...prev, newEnrollment]);
+            await api.post('/api/courses/enroll', { studentId, classId });
+            await fetchData();
             return true;
         } catch (error) {
             console.error(error); // Likely "Already enrolled"
@@ -135,7 +126,7 @@ export const AppProvider = ({ children }) => {
     const unenrollStudent = async (studentId, classId) => {
         try {
             await api.post('/api/courses/unenroll', { studentId, classId });
-            setEnrollments(prev => prev.filter(e => !(e.studentId === studentId && e.classId === classId)));
+            await fetchData();
             return true;
         } catch (error) {
             console.error(error);
@@ -163,8 +154,8 @@ export const AppProvider = ({ children }) => {
     // 4. Other Actions
     const markAttendance = async (record) => {
         try {
-            const savedRecord = await api.post('/api/attendance', record);
-            setAttendance(prev => [...prev, savedRecord]);
+            await api.post('/api/attendance', record);
+            await fetchData();
             return true;
         } catch (error) {
             console.error(error);
@@ -175,8 +166,8 @@ export const AppProvider = ({ children }) => {
     // Course Management (Super Admin)
     const addCourse = async (course) => {
         try {
-            const newCourse = await api.post('/api/courses', course);
-            setClasses(prev => [...prev, newCourse]);
+            await api.post('/api/courses', course);
+            await fetchData();
             return true;
         } catch (error) {
             alert(error.message);
@@ -187,7 +178,7 @@ export const AppProvider = ({ children }) => {
     const removeCourse = async (courseId) => {
         try {
             await api.delete(`/api/courses/${courseId}`);
-            setClasses(prev => prev.filter(c => c.id !== courseId));
+            await fetchData();
             return true;
         } catch (error) {
             console.error(error);
@@ -202,8 +193,8 @@ export const AppProvider = ({ children }) => {
     // Instructor Management
     const addInstructor = async (username, password, name) => {
         try {
-            const newInstructor = await api.post('/api/instructors', { username, password, name });
-            setInstructors(prev => [...prev, newInstructor]);
+            await api.post('/api/instructors', { username, password, name });
+            await fetchData();
             return true;
         } catch (error) {
             alert(error.message);
@@ -213,8 +204,8 @@ export const AppProvider = ({ children }) => {
 
     const updateInstructor = async (oldUsername, newData) => {
         try {
-            const updated = await api.put(`/api/instructors/${oldUsername}`, newData);
-            setInstructors(prev => prev.map(i => i.username === oldUsername ? updated : i));
+            await api.put(`/api/instructors/${oldUsername}`, newData);
+            await fetchData();
             return true;
         } catch (error) {
             alert(error.message);
@@ -225,7 +216,7 @@ export const AppProvider = ({ children }) => {
     const removeInstructor = async (username) => {
         try {
             await api.delete(`/api/instructors/${username}`);
-            setInstructors(prev => prev.filter(i => i.username !== username));
+            await fetchData();
             return true;
         } catch (error) {
             console.error(error);
