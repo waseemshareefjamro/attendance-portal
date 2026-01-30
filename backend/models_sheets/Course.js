@@ -3,18 +3,41 @@ const { getSheetRows, appendRow, updateRow, deleteRow } = require('../config/goo
 const TAB_NAME = 'Courses';
 
 class CourseModel {
+    // Normalization
+    static toFrontend(data) {
+        if (!data) return null;
+        return {
+            id: data.id || data.Id || data.ID, // Course Code
+            name: data.name || data.Name,
+            instructorId: data.instructorId || data.InstructorId || data.instructorID,
+            ...data
+        };
+    }
+
+    static toBackend(data) {
+        return {
+            id: data.id || data.Id || data.ID,
+            name: data.name || data.Name,
+            instructorId: data.instructorId || data.InstructorId || data.instructorID,
+            ...data
+        };
+    }
+
     static async find(query = {}) {
         const rows = await getSheetRows(TAB_NAME);
-        if (Object.keys(query).length === 0) return rows;
-        return rows.filter(row => Object.keys(query).every(key => row[key] == query[key]));
+        if (Object.keys(query).length === 0) return rows.map(this.toFrontend);
+
+        const filtered = rows.filter(row => Object.keys(query).every(key => row[key] == query[key]));
+        return filtered.map(this.toFrontend);
     }
 
     constructor(data) {
-        this.data = data;
+        this.data = CourseModel.toBackend(data);
     }
 
     async save() {
-        return await appendRow(TAB_NAME, this.data);
+        const saved = await appendRow(TAB_NAME, this.data);
+        return CourseModel.toFrontend(saved);
     }
 
     static async create(data) {

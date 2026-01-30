@@ -3,25 +3,45 @@ const { getSheetRows, appendRow, updateRow, deleteRow } = require('../config/goo
 const TAB_NAME = 'Instructors';
 
 class InstructorModel {
-    static async find(query = {}) {
-        const rows = await getSheetRows(TAB_NAME);
-        if (Object.keys(query).length === 0) return rows;
-        return rows.filter(row => Object.keys(query).every(key => row[key] == query[key]));
+    // Normalization Helpers
+    static toFrontend(data) {
+        if (!data) return null;
+        return {
+            Username: data.username || data.Username,
+            Password: data.password || data.Password,
+            Name: data.name || data.Name,
+            ...data
+        };
     }
 
-    static async findOne(query) {
-        const rows = await this.find(query);
-        return rows.length > 0 ? rows[0] : null; // Plain object needed for simple reads
+    static toBackend(data) {
+        return {
+            username: data.Username || data.username,
+            password: data.Password || data.password,
+            name: data.Name || data.name,
+            ...data
+        };
+    }
+
+    static async find(query = {}) {
+        const rows = await getSheetRows(TAB_NAME);
+        if (Object.keys(query).length === 0) return rows.map(this.toFrontend);
+
+        const filtered = rows.filter(row => Object.keys(query).every(key => row[key] == query[key]));
+        return filtered.map(this.toFrontend);
     }
 
     // For updates: similar to Student
     static async findOneWithUpdate(query) {
-        const rows = await this.find(query);
+        const rows = await this.find(query); // returns Frontend format
         if (rows.length === 0) return null;
         const data = rows[0];
+
+        // Return object capable of saving itself
         const instance = { ...data };
         instance.save = async function () {
-            await updateRow(TAB_NAME, 'username', this.username, this);
+            const backendData = InstructorModel.toBackend(this);
+            await updateRow(TAB_NAME, 'username', backendData.username, backendData);
             return this;
         };
         return instance;
