@@ -6,30 +6,62 @@ class StudentModel {
     // Find all matching a query
     static async find(query = {}) {
         const rows = await getSheetRows(TAB_NAME);
-        if (Object.keys(query).length === 0) return rows;
+        if (Object.keys(query).length === 0) {
+            return rows.map(this.toFrontend); // Transform for frontend
+        }
 
         // Simple filtering
-        return rows.filter(row => {
+        const filtered = rows.filter(row => {
             return Object.keys(query).every(key => row[key] == query[key]);
         });
+        return filtered.map(this.toFrontend);
+    }
+
+    // Transform internal (lowercase) to Frontend (Capitalized)
+    static toFrontend(data) {
+        if (!data) return null;
+        return {
+            Name: data.name,
+            StudentID: data.studentID || data.studentid,
+            Password: data.password,
+            Gender: data.gender,
+            ...data // include other fields just in case
+        };
+    }
+
+    // Transform Frontend (Capitalized) to internal (lowercase)
+    static toBackend(data) {
+        return {
+            name: data.Name || data.name,
+            studentID: data.StudentID || data.studentID || data.studentid,
+            password: data.Password || data.password,
+            gender: data.Gender || data.gender,
+            ...data
+        };
     }
 
     // Find one
     static async findOne(query) {
-        const rows = await this.find(query);
+        const rows = await this.find(query); // find now returns Frontend format
+        // But wait, if we return Frontend format, our internal logic (updateRow) might fail if it relies on lowercase?
+        // updateRow uses `studentID`.
+        // If we return { StudentID: '...' }, we need to be careful.
+        // Let's decide: Model returns Frontend format. Internal methods adapt.
         return rows.length > 0 ? rows[0] : null;
     }
 
     // Constructor to mimic Mongoose instance
     constructor(data) {
-        this.data = data;
+        // Normalize incoming data to backend format (lowercase) for storage
+        this.data = StudentModel.toBackend(data);
     }
 
     // Save (Create)
     async save() {
         // Check for uniqueness if needed, but for now just append
+        // appendRow expects lowercase keys because of our googleSheets.js headers
         const saved = await appendRow(TAB_NAME, this.data);
-        return saved;
+        return StudentModel.toFrontend(saved); // Return Frontend format
     }
 
     // Static create
@@ -68,8 +100,10 @@ class StudentModel {
         // Return object decorated with save method
         const studentObj = { ...data };
         studentObj.save = async function () {
+            // Convert back to backend format for storage
+            const backendData = StudentModel.toBackend(this);
             // We assume studentID is the key
-            await updateRow(TAB_NAME, 'studentID', this.studentID, this);
+            await updateRow(TAB_NAME, 'studentID', backendData.studentID, backendData);
             return this;
         };
         return studentObj;

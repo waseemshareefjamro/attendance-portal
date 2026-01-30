@@ -14,9 +14,8 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Add Student
+// Create Student
 router.post('/', async (req, res) => {
-    const { Name, StudentID, Password, Gender, Class } = req.body;
     try {
         const newStudent = new Student({
             name: Name,
