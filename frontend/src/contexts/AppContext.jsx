@@ -110,7 +110,7 @@ export const AppProvider = ({ children }) => {
         try {
             await api.delete(`/api/students/${id}`);
             // Optimistic update
-            setStudents(prev => prev.filter(student => student.studentID !== id));
+            setStudents(prev => prev.filter(student => (student.StudentID || student.studentID) !== id));
             setEnrollments(prev => prev.filter(e => e.studentId !== id));
             setAttendance(prev => prev.filter(a => a.studentId !== id));
             return true;
@@ -150,7 +150,7 @@ export const AppProvider = ({ children }) => {
             .filter(e => String(e.classId).toLowerCase() === targetClassId)
             .map(e => String(e.studentId).toLowerCase());
 
-        return students.filter(s => enrolledIds.includes(String(s.studentID).toLowerCase()));
+        return students.filter(s => enrolledIds.includes(String(s.StudentID || s.studentID).toLowerCase()));
     };
 
     const getClassesByStudent = (studentId) => {
