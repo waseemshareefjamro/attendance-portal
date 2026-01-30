@@ -28,8 +28,8 @@ const CourseManager = () => {
     };
 
     const getInstructorName = (id) => {
-        const instr = instructors.find(i => i.username === id);
-        return instr ? (instr.name || instr.username) : 'Unknown';
+        const instr = instructors.find(i => i.Username === id);
+        return instr ? (instr.Name || instr.Username) : 'Unknown';
     };
 
     return (
@@ -77,8 +77,8 @@ const CourseManager = () => {
                         >
                             <option value="">-- Select Teacher --</option>
                             {instructors.map(i => (
-                                <option key={i.username} value={i.username} className="text-black">
-                                    {i.name} ({i.username})
+                                <option key={i.Username} value={i.Username} className="text-black">
+                                    {i.Name} ({i.Username})
                                 </option>
                             ))}
                         </select>
