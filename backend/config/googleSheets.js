@@ -6,10 +6,21 @@ require('dotenv').config();
 const KEYFILEPATH = path.join(__dirname, '../google_credentials.json');
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
-const auth = new google.auth.GoogleAuth({
-    keyFile: KEYFILEPATH,
-    scopes: SCOPES,
-});
+let auth;
+if (process.env.GOOGLE_CREDENTIALS) {
+    // Load from Environment Variable (Vercel/Production)
+    const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+    auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: SCOPES,
+    });
+} else {
+    // Load from Local File
+    auth = new google.auth.GoogleAuth({
+        keyFile: KEYFILEPATH,
+        scopes: SCOPES,
+    });
+}
 
 // Singleton instance
 let sheetsService = null;
