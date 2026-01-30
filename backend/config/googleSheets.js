@@ -35,7 +35,9 @@ const getSheetsService = async () => {
 };
 
 // Spreadsheet ID from Env
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+// Spreadsheet ID (Hardcoded for Vercel stability)
+const SPREADSHEET_ID = '12O8k1C8_0b4KLslo7DvLjS2vt963mEZH1LEbQgrbamc';
+// const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 // Helper to get all rows from a sheet
 const getSheetRows = async (tabName) => {
