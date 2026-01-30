@@ -97,24 +97,36 @@ const AttendanceManager = () => {
         }));
     };
 
+    const [saving, setSaving] = useState(false);
+
     const handleSave = async () => {
         if (!selectedClassId) return;
+        setSaving(true);
 
-        const records = classStudents.map(student => ({
-            id: `${student.StudentID}-${date}-${selectedClassId}-${selectedTimeSlot.replace(/\s/g, '')}`, // Unique ID composite
-            studentId: student.StudentID,
-            name: student.Name,
-            classId: selectedClassId,
-            className: selectedClass?.name,
-            date: date,
-            timeSlot: selectedTimeSlot,
-            status: attendanceMap[student.StudentID] || 'Present',
-            timestamp: new Date().toISOString()
-        }));
+        try {
+            const records = classStudents.map(student => ({
+                id: `${student.StudentID}-${date}-${selectedClassId}-${selectedTimeSlot.replace(/\s/g, '')}`, // Unique ID composite
+                studentId: student.StudentID,
+                name: student.Name,
+                classId: selectedClassId,
+                className: selectedClass?.name,
+                date: date,
+                timeSlot: selectedTimeSlot,
+                status: attendanceMap[student.StudentID] || 'Present',
+                timestamp: new Date().toISOString()
+            }));
 
-        const success = await markAttendanceBulk(records);
-        if (success) {
-            alert('Attendance saved successfully!');
+            const success = await markAttendanceBulk(records);
+            if (success) {
+                // Use a slight timeout to confirm visual update or just standard alert
+                setTimeout(() => {
+                    alert('✅ Attendance Saved Successfully!');
+                }, 100);
+            }
+        } catch (error) {
+            alert("Error saving attendance: " + error.message);
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -224,7 +236,7 @@ const AttendanceManager = () => {
                         </thead>
                         <tbody className="divide-y divide-white/10">
                             {classStudents.map(student => {
-                                const status = attendanceMap[student.StudentID] || 'Present'; // Default visual state
+                                const status = attendanceMap[student.StudentID] || 'Present';
                                 return (
                                     <tr key={student.StudentID} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4 font-mono text-xs">{student.StudentID}</td>
@@ -254,13 +266,24 @@ const AttendanceManager = () => {
                         </tbody>
                     </table>
 
+                    {/* Save Button */}
                     {classStudents.length > 0 && (
                         <div className="p-6 border-t border-white/10 bg-white/5">
                             <button
                                 onClick={handleSave}
-                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] hover:bg-blue-500"
+                                disabled={saving}
+                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <Save size={20} /> Save Attendance Records
+                                {saving ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                                        Saving Records...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={20} /> Save Attendance Records
+                                    </>
+                                )}
                             </button>
                         </div>
                     )}
