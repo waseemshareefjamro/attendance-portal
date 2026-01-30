@@ -51,11 +51,36 @@ const getSheetRows = async (tabName) => {
         if (!rows || rows.length === 0) return [];
 
         // Assume first row is header
-        const headers = rows[0];
+        const rawHeaders = rows[0];
+        // Normalize headers to lowercase to avoid case-sensitivity issues (e.g. "Name" vs "name")
+        const headers = rawHeaders.map(h => h.trim().toLowerCase()); // Trim and lowercase
+
         const data = rows.slice(1).map(row => {
             const obj = {};
             headers.forEach((header, index) => {
-                obj[header] = row[index] || ''; // Handle empty cells
+                // Map the value to the lowercase header
+                // Note: The original Model code expects specific keys like 'name', 'password', 'studentID' or 'studentid'
+                // By lowercasing here, we ensure 'Name' in sheet becomes 'name' in object.
+                // WE MUST ENSURE MODELS EXPECT LOWERCASE KEYS OR WE MAP BACK.
+                // Assuming Models use standard lowercase/camelCase and Sheet uses Capitalized.
+
+                // MAPPING: 
+                // Sheet "Student ID" or "studentID" -> code "studentID" or "studentid"? 
+                // Let's standardise to camelCase if possible, or just keep strict lowercase.
+                // The safest is to map strictly to the keys the frontend/backend expects.
+
+                // For now, let's keep it simple: lowercase everything. 
+                // Models need to read 'name', 'gender', 'password'.
+                // If sheet has 'Name', 'Gender', then 'name', 'gender' matches.
+
+                // Special handle for studentID which might be 'Student ID'
+                let key = header;
+                if (key === 'student id' || key === 'studentid') key = 'studentID';
+                if (key === 'class') key = 'classId'; // Mapping commonly mismatched common names
+
+                obj[header] = row[index] || ''; // Store properly with normalized header? 
+                // actually, let's map index to normalized key
+                obj[key] = row[index] || '';
             });
             return obj;
         });
