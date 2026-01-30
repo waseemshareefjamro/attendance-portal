@@ -7,18 +7,18 @@ class CourseModel {
     static toFrontend(data) {
         if (!data) return null;
         return {
-            id: data.id || data.Id || data.ID, // Course Code
+            id: data.id || data.Id || data.ID || data.courseid || data['course id'], // Course Code
             name: data.name || data.Name,
-            instructorId: data.instructorId || data.InstructorId || data.instructorID,
+            instructorId: data.instructorId || data.InstructorId || data.instructorID || data.instructorid || data['instructor id'],
             ...data
         };
     }
 
     static toBackend(data) {
         return {
-            id: data.id || data.Id || data.ID,
+            id: data.id || data.Id || data.ID || data.courseid,
             name: data.name || data.Name,
-            instructorId: data.instructorId || data.InstructorId || data.instructorID,
+            instructorId: data.instructorId || data.InstructorId || data.instructorID || data.instructorid,
             ...data
         };
     }
