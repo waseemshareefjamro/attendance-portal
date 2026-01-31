@@ -44,7 +44,7 @@ const ClassManager = () => {
             a.date === date &&
             (a.timeSlot === timeSlot || (!a.timeSlot && timeSlot === 'All Day'))
         );
-        return records.sort((a, b) => a.name.localeCompare(b.name));
+        return records.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     };
 
     if (viewingSession) {

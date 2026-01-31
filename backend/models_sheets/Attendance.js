@@ -7,12 +7,15 @@ class AttendanceModel {
     static toFrontend(data) {
         if (!data) return null;
         return {
-            studentId: data.studentId || data.studentid || data.studentID || data['student id'],
-            classId: data.classId || data.classid || data.classID || data['class id'],
-            className: data.className || data.classname || data.class || data.Class,
+            studentId: data.studentId || data.studentid || data.studentID || data['student id'] || data['Student ID'],
+            classId: data.classId || data.classid || data.classID || data['class id'] || data['Class ID'],
+            className: data.className || data.classname || data.class || data.Class || data['Class Name'],
             date: data.date || data.Date,
+            timeSlot: data.timeSlot || data.TimeSlot || data['Time Slot'] || data.timeslot,
             status: data.status || data.Status,
             timestamp: data.timestamp || data.Timestamp,
+            name: data.name || data.Name || data['student name'] || data['Student Name'],
+            id: data.id || data.ID,
             ...data
         };
     }
