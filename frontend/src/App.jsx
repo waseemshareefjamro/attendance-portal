@@ -137,14 +137,7 @@ const HomeSelector = () => {
           <p className="mt-2 text-sm text-gray-400">View Attendance</p>
         </a>
 
-        {/* Super Admin Portal */}
-        <a href="/super-admin-login" className="group relative flex h-48 w-64 flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md transition-all hover:scale-105 hover:bg-white/10 hover:shadow-2xl">
-          <div className="mb-4 rounded-full bg-red-500/20 p-4 text-red-400 group-hover:bg-red-500 group-hover:text-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /></svg>
-          </div>
-          <h3 className="text-xl font-bold text-white">Super Admin</h3>
-          <p className="mt-2 text-sm text-gray-400">Master Control</p>
-        </a>
+
       </div>
     </div>
   )
