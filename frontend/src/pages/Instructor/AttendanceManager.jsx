@@ -107,7 +107,7 @@ const AttendanceManager = () => {
             const records = classStudents.map(student => ({
                 id: `${student.StudentID}-${date}-${selectedClassId}-${selectedTimeSlot.replace(/\s/g, '')}`, // Unique ID composite
                 studentId: student.StudentID,
-                name: student.Name,
+                name: student.Name || student.name || "Unknown Student",
                 classId: selectedClassId,
                 className: selectedClass?.name,
                 date: date,
