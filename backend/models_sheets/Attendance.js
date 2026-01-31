@@ -18,14 +18,40 @@ class AttendanceModel {
     }
 
     static toBackend(data) {
+        // Normalize basic fields first
+        const studentId = data.studentId || data.studentid || data.studentID || data['student id'];
+        const classId = data.classId || data.classid || data.classID || data['class id'];
+        const className = data.className || data.classname || data.class || data.Class;
+        const date = data.date || data.Date;
+        const timeSlot = data.timeSlot || data.TimeSlot || data.timeslot;
+        const status = data.status || data.Status;
+        const timestamp = data.timestamp || data.Timestamp || new Date().toISOString();
+        const name = data.name || data.Name;
+        const id = data.id || data.ID;
+
+        // Return object with multiple key variants to match potential Google Sheet Headers
+        // appendRow uses exact key matching against headers
         return {
-            studentId: data.studentId || data.studentid || data.studentID,
-            classId: data.classId || data.classid || data.classID,
-            className: data.className || data.classname || data.class || data.Class,
-            date: data.date || data.Date,
-            status: data.status || data.Status,
-            timestamp: data.timestamp || data.Timestamp,
-            ...data
+            ...data,
+            // Standard internal keys
+            id, studentId, classId, className, date, timeSlot, status, timestamp, name,
+
+            // Header Helper Variants (PascalCase / Spaced)
+            "ID": id,
+            "Student ID": studentId,
+            "StudentID": studentId,
+            "studentID": studentId,
+            "Name": name,
+            "Class ID": classId,
+            "ClassID": classId,
+            "Class": className,
+            "Class Name": className,
+            "ClassName": className,
+            "Date": date,
+            "Time Slot": timeSlot,
+            "TimeSlot": timeSlot,
+            "Status": status,
+            "Timestamp": timestamp
         };
     }
 
