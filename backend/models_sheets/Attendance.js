@@ -14,7 +14,7 @@ class AttendanceModel {
             timeSlot: data.timeSlot || data.TimeSlot || data['Time Slot'] || data.timeslot,
             status: data.status || data.Status,
             timestamp: data.timestamp || data.Timestamp,
-            name: data.name || data.Name || data['student name'] || data['Student Name'],
+            name: data.name || data.Name || data['student name'] || data['Student Name'] || data.studentname || data.StudentName || "Unknown",
             id: data.id || data.ID,
             ...data
         };
