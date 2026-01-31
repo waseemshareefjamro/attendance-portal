@@ -15,8 +15,8 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
 
-        // Allow localhost and Vercel deployments
-        if (origin.includes('localhost') || origin.includes('.vercel.app')) {
+        // Allow localhost, Vercel deployments, and custom domain
+        if (origin.includes('localhost') || origin.includes('.vercel.app') || origin.includes('nomanshaikhinstitute.com')) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
