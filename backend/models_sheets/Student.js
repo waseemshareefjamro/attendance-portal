@@ -21,12 +21,12 @@ class StudentModel {
     static toFrontend(data) {
         if (!data) return null;
         return {
-            Name: data.name,
-            StudentID: data.studentID || data.studentid,
-            Password: data.password,
-            password: data.password, // Explicitly expose lowercase for auth
-            Gender: data.gender,
-            class: data.class || data.Class,
+            Name: data.name || data['student name'] || data['studentname'] || data.Name,
+            StudentID: data.studentID || data.studentid || data['student id'] || data['studentid'],
+            Password: data.password || data.Password,
+            password: data.password || data.Password,
+            Gender: data.gender || data.Gender,
+            class: data.class || data.Class || data.className || data['class name'],
             ...data
         };
     }
