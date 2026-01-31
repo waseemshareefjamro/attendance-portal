@@ -4,7 +4,7 @@ import { exportToExcel } from '../../utils/excelUtils';
 import { CheckCircle, XCircle, Save, Calendar, Download } from 'lucide-react';
 
 const AttendanceManager = () => {
-    const { classes, students, markAttendance, attendance, currentUser, getStudentsByClass } = useApp();
+    const { classes, students, markAttendance, markAttendanceBulk, attendance, currentUser, getStudentsByClass } = useApp();
     const [selectedClassId, setSelectedClassId] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [startTime, setStartTime] = useState('09:00');
