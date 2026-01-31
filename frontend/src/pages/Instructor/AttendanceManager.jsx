@@ -223,10 +223,9 @@ const AttendanceManager = () => {
                 </div>
             </div>
 
-            {/* List */}
             {selectedClassId && (
-                <div className="glass-panel rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-gray-400">
+                <div className="glass-panel rounded-xl overflow-hidden overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-400 min-w-[600px]">
                         <thead className="bg-white/5 text-xs uppercase text-gray-200">
                             <tr>
                                 <th className="px-6 py-4">ID</th>

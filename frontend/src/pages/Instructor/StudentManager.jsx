@@ -49,7 +49,7 @@ const EnrollmentManager = () => {
                     </div>
                 </header>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="glass-panel p-4 rounded-xl text-center">
                         <span className="block text-3xl font-bold text-green-400">{stats.present}</span>
                         <span className="text-xs text-gray-400 uppercase">Present</span>
@@ -64,8 +64,8 @@ const EnrollmentManager = () => {
                     </div>
                 </div>
 
-                <div className="glass-panel rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-gray-400">
+                <div className="glass-panel rounded-xl overflow-hidden overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-400 min-w-[500px]">
                         <thead className="bg-white/5 text-xs uppercase text-gray-200">
                             <tr>
                                 <th className="px-6 py-4">Date</th>

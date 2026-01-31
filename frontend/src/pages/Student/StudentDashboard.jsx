@@ -77,7 +77,7 @@ const StudentDashboard = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
-            <header className="flex items-center justify-between mb-8">
+            <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-4">
                     <div className="h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-2xl font-bold text-white shadow-xl">
                         {student.Name.charAt(0)}

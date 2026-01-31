@@ -166,22 +166,24 @@ const EnrolledStudentsList = ({ courseId }) => {
     }
 
     return (
-        <table className="w-full text-left text-sm text-gray-300">
-            <thead className="bg-white/5 text-xs uppercase text-gray-400 sticky top-0 backdrop-blur-md">
-                <tr>
-                    <th className="px-4 py-3">ID</th>
-                    <th className="px-4 py-3">Name</th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
-                {students.map(s => (
-                    <tr key={s.StudentID} className="hover:bg-white/5">
-                        <td className="px-4 py-3 font-mono">{s.StudentID}</td>
-                        <td className="px-4 py-3 font-medium text-white">{s.Name}</td>
+        <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-gray-300">
+                <thead className="bg-white/5 text-xs uppercase text-gray-400 sticky top-0 backdrop-blur-md">
+                    <tr>
+                        <th className="px-4 py-3">ID</th>
+                        <th className="px-4 py-3">Name</th>
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                    {students.map(s => (
+                        <tr key={s.StudentID} className="hover:bg-white/5">
+                            <td className="px-4 py-3 font-mono">{s.StudentID}</td>
+                            <td className="px-4 py-3 font-medium text-white">{s.Name}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 };
 

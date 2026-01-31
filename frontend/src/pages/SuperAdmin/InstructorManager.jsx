@@ -53,7 +53,7 @@ const InstructorManager = () => {
 
     return (
         <div className="space-y-8">
-            <header className="flex justify-between items-end">
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Super Admin Dashboard</h1>
                     <p className="text-gray-400">Manage instructors and system settings</p>

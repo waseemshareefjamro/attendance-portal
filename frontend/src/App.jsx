@@ -110,7 +110,7 @@ function App() {
 // Home Selector
 const HomeSelector = () => {
   return (
-    <div className="flex h-[80vh] flex-col items-center justify-center gap-8">
+    <div className="flex min-h-[80vh] py-12 flex-col items-center justify-center gap-8">
       <div className="text-center">
         <h1 className="mb-4 text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
           Institute Portal

@@ -68,8 +68,8 @@ const ClassManager = () => {
                     </div>
                 </header>
 
-                <div className="glass-panel overflow-hidden rounded-xl">
-                    <table className="w-full text-left text-sm text-gray-400">
+                <div className="glass-panel overflow-hidden rounded-xl overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-400 min-w-[600px]">
                         <thead className="bg-white/5 text-xs uppercase text-gray-200">
                             <tr>
                                 <th className="px-6 py-4">ID</th>
@@ -115,8 +115,8 @@ const ClassManager = () => {
                     </div>
                 </header>
 
-                <div className="glass-panel overflow-hidden rounded-xl">
-                    <table className="w-full text-left text-sm text-gray-400">
+                <div className="glass-panel overflow-hidden rounded-xl overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-400 min-w-[600px]">
                         <thead className="bg-white/5 text-xs uppercase text-gray-200">
                             <tr>
                                 <th className="px-6 py-4">Date</th>
