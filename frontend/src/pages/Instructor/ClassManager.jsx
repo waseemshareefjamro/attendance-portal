@@ -141,7 +141,7 @@ const ClassManager = () => {
                                         <td className="px-6 py-4 text-center text-red-400 font-bold">{session.absent}</td>
                                         <td className="px-6 py-4 text-center">{session.total}</td>
                                         <td className="px-6 py-4 text-right">
-                                            <span className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold">
+                                            <span className="text-blue-400   text-xs font-bold">
                                                 View Details →
                                             </span>
                                         </td>
