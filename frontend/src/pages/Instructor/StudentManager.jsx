@@ -147,7 +147,7 @@ const EnrollmentManager = () => {
                                         <td className="px-6 py-3 text-right">
                                             <button
                                                 onClick={() => setViewingStudentId(s.StudentID)}
-                                                className="text-blue-400 hover:text-white text-xs underline opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="text-blue-400  transition-opacity"
                                             >
                                                 View Attendance
                                             </button>
