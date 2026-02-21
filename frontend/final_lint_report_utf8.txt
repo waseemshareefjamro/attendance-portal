@@ -1,0 +1,73 @@
+﻿
+E:\attendence site\frontend\src\components\Navbar.jsx
+  6:30  error  'NavIcon' is defined but never used  no-unused-vars
+
+E:\attendence site\frontend\src\components\common\ServerStatus.jsx
+  1:17  error  'useEffect' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+E:\attendence site\frontend\src\contexts\AppContext.jsx
+   24:18  error    'error' is defined but never used                                                                                               no-unused-vars
+   65:8   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array                    react-hooks/exhaustive-deps
+  291:18  error    'error' is defined but never used                                                                                               no-unused-vars
+  301:18  error    'error' is defined but never used                                                                                               no-unused-vars
+  311:18  error    'error' is defined but never used                                                                                               no-unused-vars
+  334:14  error    Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\attendence site\frontend\src\pages\Instructor\AttendanceManager.jsx
+   8:18  error    'students' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                   no-unused-vars
+   8:28  error    'markAttendance' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                             no-unused-vars
+   8:44  error    'markAttendanceBulk' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                         no-unused-vars
+  97:8   warning  React Hook React.useEffect has a missing dependency: 'selectedTimeSlot'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\attendence site\frontend\src\pages\Instructor\Dashboard.jsx
+  6:13  error  'students' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+E:\attendence site\frontend\src\pages\Instructor\StudentManager.jsx
+  3:10  error  'readExcelFile' is defined but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
+  3:25  error  'downloadTemplate' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+E:\attendence site\frontend\src\pages\Student\StudentDashboard.jsx
+  15:11  warning  The 'enrolledClassIds' conditional could make the dependencies of useMemo Hook (at line 18) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'enrolledClassIds' in its own useMemo() Hook                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+  21:37  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `student`, but the source dependencies were [enrolledCourses, student?.Class]. Inferred less specific property than source.
+
+  19 |
+  20 |     // Add legacy class if it exists and isn't already covered
+> 21 |     const myClasses = React.useMemo(() => {
+     |                                     ^^^^^^^
+> 22 |         let list = [...enrolledCourses];
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 23 |         if (student?.Class && !list.find(c => c.name === student.Class || c.id === student.Class)) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 24 |             // Create a synthetic course object for the legacy class
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 25 |             list.push({ id: student.Class, name: student.Class, instructorId: '' });
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |         }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |         return list;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     }, [enrolledCourses, student?.Class]);
+     | ^^^^^^ Could not preserve existing manual memoization
+  29 |
+  30 |     // State: Use descriptive names and keep at top
+  31 |     const [activeTab, setActiveTab] = useState('attendance'); // 'attendance' or 'grades'  react-hooks/preserve-manual-memoization
+  37:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  35 |     useEffect(() => {
+  36 |         if (myClasses.length > 0 && !selectedClassId) {
+> 37 |             setSelectedClassId(myClasses[0].id);
+     |             ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  38 |         }
+  39 |     }, [myClasses, selectedClassId]);
+  40 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/set-state-in-effect
+
+Γ£û 18 problems (15 errors, 3 warnings)
+

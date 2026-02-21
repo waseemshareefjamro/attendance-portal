@@ -5,8 +5,7 @@ import { CheckCircle, XCircle, Save, Calendar, Download } from 'lucide-react';
 
 const AttendanceManager = () => {
     const {
-        classes, students, markAttendance, markAttendanceBulk,
-        updateAttendanceBulk, attendance, currentUser, getStudentsByClass
+        classes, updateAttendanceBulk, attendance, currentUser, getStudentsByClass
     } = useApp();
     const [selectedClassId, setSelectedClassId] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -94,7 +93,7 @@ const AttendanceManager = () => {
         if (timeSlots.length > 0 && !timeSlots.includes(selectedTimeSlot)) {
             setSelectedTimeSlot(timeSlots[0]);
         }
-    }, [timeSlots]);
+    }, [timeSlots, selectedTimeSlot]);
 
     // Load existing attendance
     React.useEffect(() => {

@@ -3,7 +3,7 @@ import { useApp } from '../../contexts/AppContext';
 import { Users, Database, Clock } from 'lucide-react';
 
 const Dashboard = () => {
-    const { students, classes, attendance, currentUser, getStudentsByClass } = useApp();
+    const { classes, attendance, currentUser, getStudentsByClass } = useApp();
 
     // Filter data for this instructor
     const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.username);

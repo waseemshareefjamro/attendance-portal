@@ -1,38 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { CheckCircle, XCircle, Calendar, BookOpen } from 'lucide-react';
+
+// Helper to safely map IDs to Objects
+const _mapIdsToCourses = (ids, allClasses) => {
+    return ids.map(id => allClasses.find(c => c.id === id)).filter(Boolean);
+};
 
 const StudentDashboard = () => {
     const { currentUser, attendance, getClassesByStudent, classes } = useApp();
     const student = currentUser?.data;
 
     // Derived: Get Enrolled Class IDs (Array of Strings)
-    const enrolledClassIds = student ? getClassesByStudent(student.StudentID) : [];
+    const enrolledClassIds = React.useMemo(() => {
+        return student ? getClassesByStudent(student.StudentID) : [];
+    }, [student, getClassesByStudent]);
 
     // Map IDs to full Class Objects
-    const enrolledCourses = _mapIdsToCourses(enrolledClassIds, classes);
+    const enrolledCourses = React.useMemo(() => _mapIdsToCourses(enrolledClassIds, classes), [enrolledClassIds, classes]);
 
     // Add legacy class if it exists and isn't already covered
-    let myClasses = [...enrolledCourses];
-    if (student?.Class && !myClasses.find(c => c.name === student.Class || c.id === student.Class)) {
-        // Create a synthetic course object for the legacy class
-        myClasses.push({ id: student.Class, name: student.Class, instructorId: '' });
-    }
+    const myClasses = React.useMemo(() => {
+        let list = [...enrolledCourses];
+        if (student?.Class && !list.find(c => c.name === student.Class || c.id === student.Class)) {
+            // Create a synthetic course object for the legacy class
+            list.push({ id: student.Class, name: student.Class, instructorId: '' });
+        }
+        return list;
+    }, [enrolledCourses, student?.Class]);
 
-    // Helper to safely map IDs to Objects
-    function _mapIdsToCourses(ids, allClasses) {
-        return ids.map(id => allClasses.find(c => c.id === id)).filter(Boolean);
-    }
-
-    // State: Default to first class if available, else empty string
+    // State: Use descriptive names and keep at top
+    const [activeTab, setActiveTab] = useState('attendance'); // 'attendance' or 'grades'
     const [selectedClassId, setSelectedClassId] = useState('');
 
-    // Initialize selection when classes load
-    useEffect(() => {
-        if (myClasses.length > 0 && !selectedClassId) {
-            setSelectedClassId(myClasses[0].id);
-        }
-    }, [myClasses, selectedClassId]);
+    // Derived Selection: Use the manually selected ID, or default to the first available class
+    const effectiveClassId = selectedClassId || (myClasses.length > 0 ? myClasses[0].id : '');
 
     if (!student) return null;
 
@@ -44,14 +46,14 @@ const StudentDashboard = () => {
 
         const isMe = recordStudentId === currentStudentId;
 
-        if (!selectedClassId) return false;
+        if (!effectiveClassId) return false;
 
-        // Normalize selectedClassId
-        const selectedIdNormalized = String(selectedClassId).trim().toLowerCase();
+        // Normalize effectiveClassId
+        const selectedIdNormalized = String(effectiveClassId).trim().toLowerCase();
 
         // Get Name for legacy comparison
-        const targetCourse = myClasses.find(c => c.id === selectedClassId);
-        const targetNameNormalized = String(targetCourse ? targetCourse.name : selectedClassId).trim().toLowerCase();
+        const targetCourse = myClasses.find(c => c.id === effectiveClassId);
+        const targetNameNormalized = String(targetCourse ? targetCourse.name : effectiveClassId).trim().toLowerCase();
 
         // Check if record matches ID (New Style)
         const recordClassId = String(a.classId || '').trim().toLowerCase();
@@ -70,10 +72,7 @@ const StudentDashboard = () => {
     const attendancePercentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
 
     // Helper to get name
-    const selectedCourseName = myClasses.find(c => c.id === selectedClassId)?.name || 'Select a Course';
-
-    // Tab State
-    const [activeTab, setActiveTab] = useState('attendance'); // 'attendance' or 'grades'
+    const selectedCourseName = myClasses.find(c => c.id === effectiveClassId)?.name || 'Select a Course';
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -107,7 +106,7 @@ const StudentDashboard = () => {
                     <div className="glass-panel p-2 rounded-lg flex items-center gap-2">
                         <BookOpen size={16} className="text-gray-400" />
                         <select
-                            value={selectedClassId}
+                            value={effectiveClassId}
                             onChange={e => setSelectedClassId(e.target.value)}
                             className="glass-input bg-transparent outline-none text-sm w-[150px]"
                         >

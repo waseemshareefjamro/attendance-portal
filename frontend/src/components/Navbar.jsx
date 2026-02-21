@@ -3,6 +3,17 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
 import { LogOut, LayoutDashboard, Database, UserCheck, Users, UserCog, Menu, X } from 'lucide-react';
 
+const NavItem = ({ to, icon: Icon, label, setIsMenuOpen }) => (
+    <NavLink
+        to={to}
+        onClick={() => setIsMenuOpen(false)}
+        className={({ isActive }) => `flex items-center gap-2 text-sm font-medium transition-colors ${isActive ? 'text-white' : 'text-gray-400 hover:text-gray-200'} py-2 md:py-0`}
+    >
+        <Icon size={18} />
+        {label}
+    </NavLink>
+);
+
 const Navbar = () => {
     const { currentUser, logout } = useApp();
     const navigate = useNavigate();
@@ -15,17 +26,6 @@ const Navbar = () => {
     };
 
     if (!currentUser) return null;
-
-    const NavItem = ({ to, icon: Icon, label }) => (
-        <NavLink
-            to={to}
-            onClick={() => setIsMenuOpen(false)}
-            className={({ isActive }) => `flex items-center gap-2 text-sm font-medium transition-colors ${isActive ? 'text-white' : 'text-gray-400 hover:text-gray-200'} py-2 md:py-0`}
-        >
-            <Icon size={18} />
-            {label}
-        </NavLink>
-    );
 
     return (
         <nav className="glass-panel sticky top-0 z-50 mb-8 border-b border-white/10 px-6 py-4">
@@ -49,19 +49,19 @@ const Navbar = () => {
                     {/* Instructor Navigation */}
                     {currentUser.role === 'instructor' && (
                         <>
-                            <NavItem to="/instructor/dashboard" icon={LayoutDashboard} label="Dashboard" />
-                            <NavItem to="/instructor/classes" icon={Database} label="Classes" />
-                            <NavItem to="/instructor/students" icon={Users} label="Students" />
-                            <NavItem to="/instructor/attendance" icon={UserCheck} label="Attendance" />
+                            <NavItem to="/instructor/dashboard" icon={LayoutDashboard} label="Dashboard" setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem to="/instructor/classes" icon={Database} label="Classes" setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem to="/instructor/students" icon={Users} label="Students" setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem to="/instructor/attendance" icon={UserCheck} label="Attendance" setIsMenuOpen={setIsMenuOpen} />
                         </>
                     )}
 
                     {/* Super Admin Navigation */}
                     {currentUser.role === 'super_admin' && (
                         <>
-                            <NavItem to="/super-admin/dashboard" icon={UserCog} label="Instructors" />
-                            <NavItem to="/super-admin/students" icon={Users} label="Registry" />
-                            <NavItem to="/super-admin/courses" icon={Database} label="Courses" />
+                            <NavItem to="/super-admin/dashboard" icon={UserCog} label="Instructors" setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem to="/super-admin/students" icon={Users} label="Registry" setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem to="/super-admin/courses" icon={Database} label="Courses" setIsMenuOpen={setIsMenuOpen} />
                         </>
                     )}
 
@@ -89,18 +89,18 @@ const Navbar = () => {
                     <div className="flex flex-col gap-2">
                         {currentUser.role === 'instructor' && (
                             <>
-                                <NavItem to="/instructor/dashboard" icon={LayoutDashboard} label="Dashboard" />
-                                <NavItem to="/instructor/classes" icon={Database} label="Classes" />
-                                <NavItem to="/instructor/students" icon={Users} label="Students" />
-                                <NavItem to="/instructor/attendance" icon={UserCheck} label="Attendance" />
+                                <NavItem to="/instructor/dashboard" icon={LayoutDashboard} label="Dashboard" setIsMenuOpen={setIsMenuOpen} />
+                                <NavItem to="/instructor/classes" icon={Database} label="Classes" setIsMenuOpen={setIsMenuOpen} />
+                                <NavItem to="/instructor/students" icon={Users} label="Students" setIsMenuOpen={setIsMenuOpen} />
+                                <NavItem to="/instructor/attendance" icon={UserCheck} label="Attendance" setIsMenuOpen={setIsMenuOpen} />
                             </>
                         )}
 
                         {currentUser.role === 'super_admin' && (
                             <>
-                                <NavItem to="/super-admin/dashboard" icon={UserCog} label="Instructors" />
-                                <NavItem to="/super-admin/students" icon={Users} label="Registry" />
-                                <NavItem to="/super-admin/courses" icon={Database} label="Courses" />
+                                <NavItem to="/super-admin/dashboard" icon={UserCog} label="Instructors" setIsMenuOpen={setIsMenuOpen} />
+                                <NavItem to="/super-admin/students" icon={Users} label="Registry" setIsMenuOpen={setIsMenuOpen} />
+                                <NavItem to="/super-admin/courses" icon={Database} label="Courses" setIsMenuOpen={setIsMenuOpen} />
                             </>
                         )}
                     </div>

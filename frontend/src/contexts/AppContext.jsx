@@ -21,13 +21,13 @@ export const AppProvider = ({ children }) => {
             const status = await api.checkHealth();
             setServerStatus(status);
             return status.server === 'running';
-        } catch (error) {
+        } catch {
             setServerStatus({ server: 'down', database: 'error' });
             return false;
         }
     };
 
-    const fetchData = async () => {
+    const fetchData = React.useCallback(async () => {
         setLoading(true);
         const isHealthy = await checkServerHealth();
 
@@ -55,14 +55,14 @@ export const AppProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchData();
         // Poll health every 30 seconds
         const interval = setInterval(checkServerHealth, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchData]);
 
     // --- Actions ---
 
@@ -288,7 +288,7 @@ export const AppProvider = ({ children }) => {
             const response = await api.loginStudent(studentId, password);
             setCurrentUser(response);
             return true;
-        } catch (error) {
+        } catch {
             return false;
         }
     };
@@ -298,7 +298,7 @@ export const AppProvider = ({ children }) => {
             const response = await api.loginInstructor(username, password);
             setCurrentUser(response);
             return true;
-        } catch (error) {
+        } catch {
             return false;
         }
     };
@@ -308,7 +308,7 @@ export const AppProvider = ({ children }) => {
             const response = await api.loginAdmin(username, password);
             setCurrentUser(response);
             return true;
-        } catch (error) {
+        } catch {
             return false;
         }
     };

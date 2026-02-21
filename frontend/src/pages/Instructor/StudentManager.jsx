@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { readExcelFile, downloadTemplate } from '../../utils/excelUtils';
+
 import { Plus, Users, Trash2, Search, Link as LinkIcon } from 'lucide-react';
 
 const EnrollmentManager = () => {
