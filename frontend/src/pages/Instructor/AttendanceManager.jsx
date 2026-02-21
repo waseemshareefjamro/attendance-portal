@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { exportToExcel } from '../../utils/excelUtils';
 import { CheckCircle, XCircle, Save, Calendar, Download } from 'lucide-react';
@@ -7,12 +8,21 @@ const AttendanceManager = () => {
     const {
         classes, updateAttendanceBulk, attendance, currentUser, getStudentsByClass
     } = useApp();
-    const [selectedClassId, setSelectedClassId] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [startTime, setStartTime] = useState('09:00');
+    const location = useLocation();
+    const editState = location.state || {};
+
+    const [selectedClassId, setSelectedClassId] = useState(editState.classId || '');
+    const [date, setDate] = useState(editState.date || new Date().toISOString().split('T')[0]);
+
+    // Time picker states (12h)
+    const [hour, setHour] = useState('09');
+    const [minute, setMinute] = useState('00');
+    const [period, setPeriod] = useState('AM');
+
+    // Convert 12h to 24h for calculations if needed, but we'll use 12h states directly
     const [durationHours, setDurationHours] = useState(1);
     const [durationMinutes, setDurationMinutes] = useState(0);
-    const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+    const [selectedTimeSlot, setSelectedTimeSlot] = useState(editState.timeSlot || '');
 
     // attendanceMap: { [studentId]: 'Present' | 'Absent' }
     const [attendanceMap, setAttendanceMap] = useState({});
@@ -40,13 +50,16 @@ const AttendanceManager = () => {
             // Adjust for 24h wrap
             h = h % 24;
 
-            const period = h >= 12 ? 'PM' : 'AM';
+            const p = h >= 12 ? 'PM' : 'AM';
             const showH = h % 12 || 12;
             const showM = m.toString().padStart(2, '0');
-            return `${showH}:${showM} ${period}`;
+            return `${showH}:${showM} ${p}`;
         };
 
-        const [startH, startM] = startTime.split(':').map(Number);
+        let startH = parseInt(hour);
+        if (period === 'PM' && startH !== 12) startH += 12;
+        if (period === 'AM' && startH === 12) startH = 0;
+        const startM = parseInt(minute);
 
         // 1. Calculate Full Duration Slot
         const totalMinutes = (durationHours * 60) + durationMinutes;
@@ -86,14 +99,31 @@ const AttendanceManager = () => {
         }
 
         return slots;
-    }, [startTime, durationHours, durationMinutes]);
+    }, [hour, minute, period, durationHours, durationMinutes]);
 
-    // Auto-select first slot
-    React.useEffect(() => {
-        if (timeSlots.length > 0 && !timeSlots.includes(selectedTimeSlot)) {
-            setSelectedTimeSlot(timeSlots[0]);
+    // Auto-select first slot or handled edit state
+    useEffect(() => {
+        if (timeSlots.length > 0) {
+            if (editState.timeSlot && timeSlots.includes(editState.timeSlot)) {
+                setSelectedTimeSlot(editState.timeSlot);
+            } else if (!timeSlots.includes(selectedTimeSlot)) {
+                setSelectedTimeSlot(timeSlots[0]);
+            }
         }
-    }, [timeSlots, selectedTimeSlot]);
+    }, [timeSlots, selectedTimeSlot, editState.timeSlot]);
+
+    // Handle initial state parsing for edit
+    useEffect(() => {
+        if (editState.timeSlot) {
+            // "03:30 PM - 04:30 PM (Full Class)" -> Extract start
+            const match = editState.timeSlot.match(/(\d+):(\d+)\s(AM|PM)/);
+            if (match) {
+                setHour(match[1].padStart(2, '0'));
+                setMinute(match[2].padStart(2, '0'));
+                setPeriod(match[3]);
+            }
+        }
+    }, [editState.timeSlot]);
 
     // Load existing attendance
     React.useEffect(() => {
@@ -201,12 +231,35 @@ const AttendanceManager = () => {
                     <div className="flex gap-2">
                         <div className="flex-1">
                             <label className="text-sm text-gray-400">Start Time</label>
-                            <input
-                                type="time"
-                                value={startTime}
-                                onChange={e => setStartTime(e.target.value)}
-                                className="glass-input w-full rounded-lg p-3 outline-none"
-                            />
+                            <div className="flex gap-1">
+                                <select
+                                    value={hour}
+                                    onChange={e => setHour(e.target.value)}
+                                    className="glass-input w-full rounded-lg px-2 py-3 outline-none text-center appearance-none"
+                                >
+                                    {Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0')).map(h => (
+                                        <option key={h} value={h} className="text-black">{h}</option>
+                                    ))}
+                                </select>
+                                <span className="flex items-center text-gray-400">:</span>
+                                <select
+                                    value={minute}
+                                    onChange={e => setMinute(e.target.value)}
+                                    className="glass-input w-full rounded-lg px-2 py-3 outline-none text-center appearance-none"
+                                >
+                                    {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(m => (
+                                        <option key={m} value={m} className="text-black">{m}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={period}
+                                    onChange={e => setPeriod(e.target.value)}
+                                    className="glass-input w-20 rounded-lg px-2 py-3 outline-none text-center appearance-none font-bold"
+                                >
+                                    <option value="AM" className="text-black">AM</option>
+                                    <option value="PM" className="text-black">PM</option>
+                                </select>
+                            </div>
                         </div>
                         <div className="w-20">
                             <label className="text-sm text-gray-400">Hrs</label>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 
 const ClassManager = () => {
     const { classes, currentUser, attendance } = useApp();
+    const navigate = useNavigate();
     const [viewingClassId, setViewingClassId] = useState(null);
     const [viewingSession, setViewingSession] = useState(null); // { date, timeSlot }
 
@@ -140,8 +142,23 @@ const ClassManager = () => {
                                         <td className="px-6 py-4 text-center text-green-400 font-bold">{session.present}</td>
                                         <td className="px-6 py-4 text-center text-red-400 font-bold">{session.absent}</td>
                                         <td className="px-6 py-4 text-center">{session.total}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <span className="text-blue-400   text-xs font-bold">
+                                        <td className="px-6 py-4 text-right flex justify-end gap-3">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate('/instructor/attendance', {
+                                                        state: {
+                                                            classId: viewingClassId,
+                                                            date: session.date,
+                                                            timeSlot: session.timeSlot
+                                                        }
+                                                    });
+                                                }}
+                                                className="text-yellow-400 hover:text-yellow-300 text-xs font-bold transition-colors"
+                                            >
+                                                Edit
+                                            </button>
+                                            <span className="text-blue-400 text-xs font-bold">
                                                 View Details →
                                             </span>
                                         </td>
