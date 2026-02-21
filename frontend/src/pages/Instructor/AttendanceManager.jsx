@@ -4,7 +4,10 @@ import { exportToExcel } from '../../utils/excelUtils';
 import { CheckCircle, XCircle, Save, Calendar, Download } from 'lucide-react';
 
 const AttendanceManager = () => {
-    const { classes, students, markAttendance, markAttendanceBulk, attendance, currentUser, getStudentsByClass } = useApp();
+    const {
+        classes, students, markAttendance, markAttendanceBulk,
+        updateAttendanceBulk, attendance, currentUser, getStudentsByClass
+    } = useApp();
     const [selectedClassId, setSelectedClassId] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [startTime, setStartTime] = useState('09:00');
@@ -14,6 +17,9 @@ const AttendanceManager = () => {
 
     // attendanceMap: { [studentId]: 'Present' | 'Absent' }
     const [attendanceMap, setAttendanceMap] = useState({});
+    // docIdMap: { [studentId]: docId }
+    const [docIdMap, setDocIdMap] = useState({});
+    const [isEditing, setIsEditing] = useState(false);
 
     // Filter classes for this instructor
     const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.username);
@@ -90,6 +96,33 @@ const AttendanceManager = () => {
         }
     }, [timeSlots]);
 
+    // Load existing attendance
+    React.useEffect(() => {
+        if (!selectedClassId || !date || !selectedTimeSlot) return;
+
+        const existingRecords = attendance.filter(a =>
+            a.classId === selectedClassId &&
+            a.date === date &&
+            a.timeSlot === selectedTimeSlot
+        );
+
+        if (existingRecords.length > 0) {
+            const newAttendanceMap = {};
+            const newDocIdMap = {};
+            existingRecords.forEach(rec => {
+                newAttendanceMap[rec.studentId] = rec.status;
+                newDocIdMap[rec.studentId] = rec.$id;
+            });
+            setAttendanceMap(newAttendanceMap);
+            setDocIdMap(newDocIdMap);
+            setIsEditing(true);
+        } else {
+            setAttendanceMap({});
+            setDocIdMap({});
+            setIsEditing(false);
+        }
+    }, [selectedClassId, date, selectedTimeSlot, attendance]);
+
     const handleStatusChange = (studentId, status) => {
         setAttendanceMap(prev => ({
             ...prev,
@@ -105,7 +138,7 @@ const AttendanceManager = () => {
 
         try {
             const records = classStudents.map(student => ({
-                id: `${student.StudentID}-${date}-${selectedClassId}-${selectedTimeSlot.replace(/\s/g, '')}`, // Unique ID composite
+                $id: docIdMap[student.StudentID], // existing ID if any
                 studentId: student.StudentID,
                 name: student.Name || student.name || "Unknown Student",
                 classId: selectedClassId,
@@ -116,11 +149,10 @@ const AttendanceManager = () => {
                 timestamp: new Date().toISOString()
             }));
 
-            const success = await markAttendanceBulk(records);
+            const success = await updateAttendanceBulk(records);
             if (success) {
-                // Use a slight timeout to confirm visual update or just standard alert
                 setTimeout(() => {
-                    alert('✅ Attendance Saved Successfully!');
+                    alert('✅ Attendance Records Updated Successfully!');
                 }, 100);
             }
         } catch (error) {
@@ -276,11 +308,11 @@ const AttendanceManager = () => {
                                 {saving ? (
                                     <>
                                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                                        Saving Records...
+                                        {isEditing ? 'Updating Records...' : 'Saving Records...'}
                                     </>
                                 ) : (
                                     <>
-                                        <Save size={20} /> Save Attendance Records
+                                        <Save size={20} /> {isEditing ? 'Update Attendance Records' : 'Save Attendance Records'}
                                     </>
                                 )}
                             </button>

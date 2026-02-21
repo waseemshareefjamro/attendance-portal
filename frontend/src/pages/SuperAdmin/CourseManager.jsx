@@ -1,29 +1,51 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { Plus, Trash2, BookOpen, GraduationCap, XCircle } from 'lucide-react';
+import { Plus, Trash2, BookOpen, GraduationCap, XCircle, Pencil, Save } from 'lucide-react';
 
 const CourseManager = () => {
-    const { classes, addCourse, removeCourse, instructors } = useApp();
-    const [newCourse, setNewCourse] = useState({ name: '', id: '', instructorId: '' });
+    const { classes, addCourse, updateCourse, removeCourse, instructors } = useApp();
+    const [formData, setFormData] = useState({ name: '', id: '', instructorId: '' });
     const [selectedCourse, setSelectedCourse] = useState(null);
+    const [editingDocId, setEditingDocId] = useState(null);
 
-    const handleAdd = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (newCourse.name && newCourse.id && newCourse.instructorId) {
-            if (addCourse(newCourse)) {
-                alert("Course Added!");
-                setNewCourse({ name: '', id: '', instructorId: '' });
+        if (formData.name && formData.id && formData.instructorId) {
+            if (editingDocId) {
+                // Update mode
+                if (await updateCourse(editingDocId, formData)) {
+                    alert("Course Updated!");
+                    setEditingDocId(null);
+                    setFormData({ name: '', id: '', instructorId: '' });
+                }
             } else {
-                alert("Course ID already exists!");
+                // Add mode
+                if (await addCourse(formData)) {
+                    alert("Course Added!");
+                    setFormData({ name: '', id: '', instructorId: '' });
+                } else {
+                    alert("Course ID already exists!");
+                }
             }
         } else {
             alert("Please fill all fields");
         }
     };
 
-    const handleDelete = (id) => {
+    const startEdit = (course) => {
+        setEditingDocId(course.$id);
+        setFormData({ name: course.name, id: course.id, instructorId: course.instructorId });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cancelEdit = () => {
+        setEditingDocId(null);
+        setFormData({ name: '', id: '', instructorId: '' });
+    };
+
+    const handleDelete = async (docId) => {
         if (window.confirm("Delete this course? Enrollments will need cleanup.")) {
-            removeCourse(id);
+            await removeCourse(docId);
         }
     };
 
@@ -39,18 +61,19 @@ const CourseManager = () => {
                 <p className="text-gray-400">Create courses and assign instructors</p>
             </header>
 
-            {/* Add Course Form */}
-            <div className="glass-panel p-8 rounded-xl h-fit">
+            {/* Course Form */}
+            <div className={`glass-panel p-8 rounded-xl h-fit border transition-colors ${editingDocId ? 'border-blue-500/50 bg-blue-500/5' : 'border-white/10'}`}>
                 <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <Plus size={20} className="text-blue-400" /> Add New Course
+                    {editingDocId ? <Pencil size={20} className="text-blue-400" /> : <Plus size={20} className="text-blue-400" />}
+                    {editingDocId ? 'Edit Course' : 'Add New Course'}
                 </h3>
-                <form onSubmit={handleAdd} className="grid md:grid-cols-2 gap-4 items-end">
+                <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4 items-end">
                     <div>
                         <label className="text-sm text-gray-400 mb-1 block">Course Name</label>
                         <input
                             type="text"
-                            value={newCourse.name}
-                            onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })}
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             className="glass-input w-full rounded-lg p-3 outline-none"
                             placeholder="e.g. Introduction to Physics"
                             required
@@ -60,8 +83,8 @@ const CourseManager = () => {
                         <label className="text-sm text-gray-400 mb-1 block">Course ID</label>
                         <input
                             type="text"
-                            value={newCourse.id}
-                            onChange={(e) => setNewCourse({ ...newCourse, id: e.target.value })}
+                            value={formData.id}
+                            onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                             className="glass-input w-full rounded-lg p-3 outline-none font-mono"
                             placeholder="e.g. PHY-101"
                             required
@@ -70,8 +93,8 @@ const CourseManager = () => {
                     <div>
                         <label className="text-sm text-gray-400 mb-1 block">Assign Instructor</label>
                         <select
-                            value={newCourse.instructorId}
-                            onChange={(e) => setNewCourse({ ...newCourse, instructorId: e.target.value })}
+                            value={formData.instructorId}
+                            onChange={(e) => setFormData({ ...formData, instructorId: e.target.value })}
                             className="glass-input w-full rounded-lg p-3 outline-none"
                             required
                         >
@@ -83,46 +106,68 @@ const CourseManager = () => {
                             ))}
                         </select>
                     </div>
-                    <button
-                        type="submit"
-                        className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
-                    >
-                        <BookOpen size={18} /> Create Course
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            type="submit"
+                            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-3 font-semibold text-white transition-colors ${editingDocId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'}`}
+                        >
+                            {editingDocId ? <Save size={18} /> : <Plus size={18} />}
+                            {editingDocId ? 'Update Course' : 'Create Course'}
+                        </button>
+                        {editingDocId && (
+                            <button
+                                type="button"
+                                onClick={cancelEdit}
+                                className="px-6 py-3 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        )}
+                    </div>
                 </form>
             </div>
 
             {/* Course List */}
-            <div className="glass-panel p-8 rounded-xl">
+            <div className="glass-panel p-4 md:p-8 rounded-xl">
                 <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                     <GraduationCap size={20} className="text-purple-400" /> All Courses
                 </h3>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {classes.map((course, idx) => (
-                        <div key={idx} className="glass-panel group relative flex flex-col gap-2 rounded-xl p-6 transition-all hover:bg-white/10">
+                        <div key={idx} className="glass-panel group relative flex flex-col gap-2 rounded-xl p-6 transition-all hover:bg-white/10 border border-white/5 hover:border-white/20">
                             <div className="flex justify-between items-start">
-                                <h4 className="font-bold text-white text-lg">{course.name}</h4>
-                                <span className="bg-white/10 text-xs px-2 py-1 rounded text-gray-300 font-mono">{course.id}</span>
+                                <h4 className="font-bold text-white text-lg leading-tight">{course.name}</h4>
+                                <span className="bg-white/10 text-[10px] px-2 py-1 rounded text-gray-300 font-mono shrink-0 ml-2">{course.id}</span>
                             </div>
                             <p className="text-sm text-gray-400">
                                 Instructor: <span className="text-blue-400">{getInstructorName(course.instructorId)}</span>
                             </p>
 
-                            <div className="mt-4 pt-4 border-t border-white/10">
+                            <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap justify-between items-center gap-3">
                                 <button
                                     onClick={() => setSelectedCourse(course)}
                                     className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300"
                                 >
-                                    <BookOpen size={14} /> View Enrolled Students
+                                    <BookOpen size={14} /> View Enrolled
                                 </button>
-                            </div>
 
-                            <button
-                                onClick={() => handleDelete(course.id)}
-                                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-red-400 hover:text-white transition-opacity bg-red-500/10 p-2 rounded hover:bg-red-500"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                                <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ml-auto">
+                                    <button
+                                        onClick={() => startEdit(course)}
+                                        className="text-blue-400 hover:text-white bg-blue-500/10 p-2 rounded hover:bg-blue-600 transition-colors"
+                                        title="Edit Course"
+                                    >
+                                        <Pencil size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(course.$id)}
+                                        className="text-red-400 hover:text-white bg-red-500/10 p-2 rounded hover:bg-red-600 transition-colors"
+                                        title="Delete Course"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     ))}
                     {classes.length === 0 && (

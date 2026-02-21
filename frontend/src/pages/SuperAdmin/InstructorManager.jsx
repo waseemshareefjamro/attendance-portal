@@ -5,12 +5,12 @@ import { Plus, UserCog, Shield } from 'lucide-react';
 const InstructorManager = () => {
     const { instructors, addInstructor, updateInstructor, removeInstructor } = useApp();
     const [formData, setFormData] = useState({ username: '', password: '', name: '' });
-    const [editingUsername, setEditingUsername] = useState(null);
+    const [editingDocId, setEditingDocId] = useState(null);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [activeTab, setActiveTab] = useState('instructors'); // 'instructors' or 'grades'
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
@@ -20,18 +20,18 @@ const InstructorManager = () => {
             return;
         }
 
-        if (editingUsername) {
+        if (editingDocId) {
             // Update Logic
-            if (updateInstructor(editingUsername, formData)) {
+            if (await updateInstructor(editingDocId, formData)) {
                 setSuccess(`Instructor updated successfully!`);
-                setEditingUsername(null);
+                setEditingDocId(null);
                 setFormData({ username: '', password: '', name: '' });
             } else {
                 setError('Username collision or update failed');
             }
         } else {
             // Add Logic
-            if (addInstructor(formData.username, formData.password, formData.name)) {
+            if (await addInstructor(formData.username, formData.password, formData.name)) {
                 setSuccess(`Instructor added successfully!`);
                 setFormData({ username: '', password: '', name: '' });
             } else {
@@ -41,13 +41,13 @@ const InstructorManager = () => {
     };
 
     const startEdit = (instr) => {
-        setEditingUsername(instr.username);
-        setFormData({ username: instr.username, password: instr.password, name: instr.name || '' });
+        setEditingDocId(instr.$id);
+        setFormData({ username: instr.Username, password: instr.Password, name: instr.Name || '' });
     };
 
-    const handleDelete = (username) => {
+    const handleDelete = (docId, username) => {
         if (window.confirm(`Delete instructor ${username}? This cannot be undone.`)) {
-            removeInstructor(username);
+            removeInstructor(docId);
         }
     };
 
@@ -80,7 +80,7 @@ const InstructorManager = () => {
                     <div className="glass-panel p-8 rounded-xl h-fit">
                         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                             <Plus size={20} className="text-blue-400" />
-                            {editingUsername ? 'Edit Instructor' : 'Add New Instructor'}
+                            {editingDocId ? 'Edit Instructor' : 'Add New Instructor'}
                         </h3>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
@@ -123,14 +123,14 @@ const InstructorManager = () => {
                             <div className="flex gap-2 pt-2">
                                 <button
                                     type="submit"
-                                    className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-3 font-semibold text-white transition-colors ${editingUsername ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                    className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-3 font-semibold text-white transition-colors ${editingDocId ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                                 >
-                                    <UserCog size={18} /> {editingUsername ? 'Update' : 'Create'}
+                                    <UserCog size={18} /> {editingDocId ? 'Update' : 'Create'}
                                 </button>
-                                {editingUsername && (
+                                {editingDocId && (
                                     <button
                                         type="button"
-                                        onClick={() => { setEditingUsername(null); setFormData({ username: '', password: '', name: '' }); }}
+                                        onClick={() => { setEditingDocId(null); setFormData({ username: '', password: '', name: '' }); }}
                                         className="px-4 rounded-lg bg-gray-600 text-white hover:bg-gray-700"
                                     >
                                         Cancel
@@ -150,16 +150,16 @@ const InstructorManager = () => {
                                 <div key={idx} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/5 group hover:bg-white/10 transition-all">
                                     <div className="flex items-center gap-3">
                                         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-white font-bold">
-                                            {instr.username.charAt(0).toUpperCase()}
+                                            {(instr.Username || 'U').charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <p className="font-medium text-white">{instr.name || instr.username}</p>
-                                            <p className="text-xs text-gray-400">Username: {instr.username}</p>
+                                            <p className="font-medium text-white">{instr.Name || instr.Username}</p>
+                                            <p className="text-xs text-gray-400">Username: {instr.Username}</p>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => startEdit(instr)} className="text-blue-400 hover:text-white p-2">Edit</button>
-                                        <button onClick={() => handleDelete(instr.username)} className="text-red-400 hover:text-white p-2">Delete</button>
+                                        <button onClick={() => handleDelete(instr.$id, instr.Username)} className="text-red-400 hover:text-white p-2">Delete</button>
                                     </div>
                                 </div>
                             ))}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { appwriteService as api } from '../services/appwriteService';
 
 const AppContext = createContext();
 
@@ -18,11 +18,11 @@ export const AppProvider = ({ children }) => {
     // Initial Data Fetch
     const checkServerHealth = async () => {
         try {
-            const status = await api.get('/api/health');
+            const status = await api.checkHealth();
             setServerStatus(status);
-            return true;
+            return status.server === 'running';
         } catch (error) {
-            setServerStatus({ server: 'down', database: 'unknown' });
+            setServerStatus({ server: 'down', database: 'error' });
             return false;
         }
     };
@@ -38,11 +38,11 @@ export const AppProvider = ({ children }) => {
 
         try {
             const [studentsData, enrollmentsData, attendanceData, classesData, instructorsData] = await Promise.all([
-                api.get('/api/students'),
-                api.get('/api/courses/enrollments'),
-                api.get('/api/attendance'),
-                api.get('/api/courses'),
-                api.get('/api/instructors')
+                api.getStudents(),
+                api.getEnrollments(),
+                api.getAttendance(),
+                api.getCourses(),
+                api.getInstructors()
             ]);
 
             setStudents(studentsData);
@@ -69,7 +69,7 @@ export const AppProvider = ({ children }) => {
     // 1. Registry Management (Super Admin)
     const addStudent = async (student) => {
         try {
-            await api.post('/api/students', student);
+            await api.addStudent(student);
             await fetchData();
             return true;
         } catch (error) {
@@ -80,7 +80,11 @@ export const AppProvider = ({ children }) => {
 
     const addStudentsBulk = async (newStudents) => {
         try {
-            await api.post('/api/students/bulk', newStudents);
+            // Appwrite doesn't have a native bulk create document in one call
+            // We'll loop for now to match behavior, but we could optimize later
+            for (const student of newStudents) {
+                await api.addStudent(student);
+            }
             await fetchData();
             return true;
         } catch (error) {
@@ -89,9 +93,9 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const updateStudent = async (oldId, updatedData) => {
+    const updateStudent = async (docId, updatedData) => {
         try {
-            await api.put(`/api/students/${oldId}`, updatedData);
+            await api.updateStudent(docId, updatedData);
             await fetchData();
             return true;
         } catch (error) {
@@ -100,9 +104,9 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const removeStudentRaw = async (id) => {
+    const removeStudentRaw = async (docId) => {
         try {
-            await api.delete(`/api/students/${id}`);
+            await api.deleteStudent(docId);
             await fetchData();
             return true;
         } catch (error) {
@@ -112,20 +116,20 @@ export const AppProvider = ({ children }) => {
     };
 
     // 2. Enrollment Management (Instructors)
-    const enrollStudent = async (studentId, classId) => {
+    const enrollStudent = async (studentId, classId, studentName) => {
         try {
-            await api.post('/api/courses/enroll', { studentId, classId });
+            await api.enrollStudent(studentId, classId, studentName);
             await fetchData();
             return true;
         } catch (error) {
-            console.error(error); // Likely "Already enrolled"
+            console.error(error);
             return false;
         }
     };
 
     const unenrollStudent = async (studentId, classId) => {
         try {
-            await api.post('/api/courses/unenroll', { studentId, classId });
+            await api.unenrollStudent(studentId, classId);
             await fetchData();
             return true;
         } catch (error) {
@@ -141,7 +145,7 @@ export const AppProvider = ({ children }) => {
             .filter(e => String(e.classId).toLowerCase() === targetClassId)
             .map(e => String(e.studentId).toLowerCase());
 
-        return students.filter(s => enrolledIds.includes(String(s.StudentID || s.studentID).toLowerCase()));
+        return students.filter(s => enrolledIds.includes(String(s.studentID || s.StudentID).toLowerCase()));
     };
 
     const getClassesByStudent = (studentId) => {
@@ -154,7 +158,7 @@ export const AppProvider = ({ children }) => {
     // 4. Other Actions
     const markAttendance = async (record) => {
         try {
-            await api.post('/api/attendance', record);
+            await api.markAttendance(record);
             await fetchData();
             return true;
         } catch (error) {
@@ -165,7 +169,9 @@ export const AppProvider = ({ children }) => {
 
     const markAttendanceBulk = async (records) => {
         try {
-            await api.post('/api/attendance/bulk', records);
+            for (const record of records) {
+                await api.markAttendance(record);
+            }
             await fetchData();
             return true;
         } catch (error) {
@@ -175,10 +181,29 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    const updateAttendanceBulk = async (records) => {
+        try {
+            for (const record of records) {
+                // If record has an $id, update it, otherwise create it
+                if (record.$id) {
+                    await api.updateAttendance(record.$id, record);
+                } else {
+                    await api.markAttendance(record);
+                }
+            }
+            await fetchData();
+            return true;
+        } catch (error) {
+            console.error(error);
+            alert("Failed to update some records: " + error.message);
+            return false;
+        }
+    };
+
     // Course Management (Super Admin)
     const addCourse = async (course) => {
         try {
-            await api.post('/api/courses', course);
+            await api.addCourse(course);
             await fetchData();
             return true;
         } catch (error) {
@@ -187,9 +212,20 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const removeCourse = async (courseId) => {
+    const updateCourse = async (docId, newData) => {
         try {
-            await api.delete(`/api/courses/${courseId}`);
+            await api.updateCourse(docId, newData);
+            await fetchData();
+            return true;
+        } catch (error) {
+            alert(error.message);
+            return false;
+        }
+    };
+
+    const removeCourse = async (docId) => {
+        try {
+            await api.deleteCourse(docId);
             await fetchData();
             return true;
         } catch (error) {
@@ -205,7 +241,7 @@ export const AppProvider = ({ children }) => {
     // Instructor Management
     const addInstructor = async (username, password, name) => {
         try {
-            await api.post('/api/instructors', { username, password, name });
+            await api.addInstructor({ username, password, name });
             await fetchData();
             return true;
         } catch (error) {
@@ -214,9 +250,9 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const updateInstructor = async (oldUsername, newData) => {
+    const updateInstructor = async (docId, newData) => {
         try {
-            await api.put(`/api/instructors/${oldUsername}`, newData);
+            await api.updateInstructor(docId, newData);
             await fetchData();
             return true;
         } catch (error) {
@@ -225,9 +261,9 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const removeInstructor = async (username) => {
+    const removeInstructor = async (docId) => {
         try {
-            await api.delete(`/api/instructors/${username}`);
+            await api.deleteInstructor(docId);
             await fetchData();
             return true;
         } catch (error) {
@@ -249,7 +285,7 @@ export const AppProvider = ({ children }) => {
     // Login Logic
     const loginStudent = async (studentId, password) => {
         try {
-            const response = await api.post('/api/auth/login/student', { studentId, password });
+            const response = await api.loginStudent(studentId, password);
             setCurrentUser(response);
             return true;
         } catch (error) {
@@ -259,7 +295,7 @@ export const AppProvider = ({ children }) => {
 
     const loginInstructor = async (username, password) => {
         try {
-            const response = await api.post('/api/auth/login/instructor', { username, password });
+            const response = await api.loginInstructor(username, password);
             setCurrentUser(response);
             return true;
         } catch (error) {
@@ -269,7 +305,7 @@ export const AppProvider = ({ children }) => {
 
     const loginSuperAdmin = async (username, password) => {
         try {
-            const response = await api.post('/api/auth/login/admin', { username, password });
+            const response = await api.loginAdmin(username, password);
             setCurrentUser(response);
             return true;
         } catch (error) {
@@ -286,7 +322,7 @@ export const AppProvider = ({ children }) => {
             students, enrollments, attendance, classes, instructors, currentUser, loading, serverStatus,
             addStudent, addStudentsBulk, updateStudent, removeStudentRaw,
             enrollStudent, unenrollStudent, getStudentsByClass, getClassesByStudent,
-            markAttendance, markAttendanceBulk, addClass, addCourse, removeCourse, addInstructor, updateInstructor, removeInstructor,
+            markAttendance, markAttendanceBulk, updateAttendanceBulk, addClass, addCourse, updateCourse, removeCourse, addInstructor, updateInstructor, removeInstructor,
             loginStudent, loginInstructor, loginSuperAdmin, logout,
             generateCredential, generateStudentId
         }}>
@@ -296,3 +332,4 @@ export const AppProvider = ({ children }) => {
 };
 
 export const useApp = () => useContext(AppContext);
+

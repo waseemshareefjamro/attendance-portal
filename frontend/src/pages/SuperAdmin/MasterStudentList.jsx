@@ -53,7 +53,7 @@ const MasterStudentList = () => {
     };
 
     const startEdit = (student) => {
-        setEditingId(student.StudentID);
+        setEditingId(student.$id);
         setFormData({ Name: student.Name, StudentID: student.StudentID, Password: student.Password, Gender: student.Gender || 'Male' });
         setActiveTab('add');
     };
@@ -91,8 +91,8 @@ const MasterStudentList = () => {
     // Enrollment Management Logic
     const handleAddCourse = () => {
         if (!selectedCourseId || !managingStudent) return;
-        // Enroll using StudentID and CourseID
-        enrollStudent(managingStudent.StudentID, selectedCourseId);
+        // Enroll using StudentID, CourseID and Name
+        enrollStudent(managingStudent.StudentID, selectedCourseId, managingStudent.Name);
         setSelectedCourseId('');
     };
 
@@ -290,14 +290,14 @@ const MasterStudentList = () => {
                                     <td className="px-6 py-3 font-mono text-yellow-400">{s.Password}</td>
                                     <td className="px-6 py-3">{s.Name}</td>
                                     <td className="px-6 py-3">{s.Gender || 'Male'}</td>
-                                    <td className="px-6 py-3 flex justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                    <td className="px-6 py-3 flex justify-end gap-2 opacity-100 sm:opacity-50 sm:group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => setManagingStudent(s)} className="text-purple-400 hover:text-white p-2 hover:bg-purple-500/20 rounded" title="Manage Courses">
                                             <BookOpen size={16} />
                                         </button>
                                         <button onClick={() => startEdit(s)} className="text-blue-400 hover:text-white p-2 hover:bg-blue-500/20 rounded" title="Edit">
                                             <Pencil size={16} />
                                         </button>
-                                        <button onClick={() => handleDelete(s.StudentID)} className="text-red-400 hover:text-white p-2 hover:bg-red-500/20 rounded" title="Delete">
+                                        <button onClick={() => handleDelete(s.$id)} className="text-red-400 hover:text-white p-2 hover:bg-red-500/20 rounded" title="Delete">
                                             <Trash2 size={16} />
                                         </button>
                                     </td>
