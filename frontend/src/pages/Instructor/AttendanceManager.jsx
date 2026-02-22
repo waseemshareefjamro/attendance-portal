@@ -149,10 +149,20 @@ const AttendanceManager = () => {
         if (existingRecords.length > 0) {
             const newAttendanceMap = {};
             const newDocIdMap = {};
+            const latestTsMap = {}; // { [studentId]: timestamp }
+
             existingRecords.forEach(rec => {
-                newAttendanceMap[rec.studentId] = rec.status;
-                newDocIdMap[rec.studentId] = rec.$id;
+                const studentId = rec.studentId;
+                const ts = new Date(rec.timestamp || rec.$createdAt).getTime();
+
+                // Only update if we don't have a record yet, or this one is newer
+                if (!latestTsMap[studentId] || ts > latestTsMap[studentId]) {
+                    newAttendanceMap[studentId] = rec.status;
+                    newDocIdMap[studentId] = rec.$id;
+                    latestTsMap[studentId] = ts;
+                }
             });
+
             setAttendanceMap(newAttendanceMap);
             setDocIdMap(newDocIdMap);
             setIsEditing(true);

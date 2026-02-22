@@ -34,7 +34,9 @@ const ClassManager = () => {
 
         classRecords.forEach(record => {
             // Aggressive normalization for session grouping
-            const key = `${record.date}-${normalizeSlot(record.timeSlot)}`;
+            const normalizedSlot = normalizeSlot(record.timeSlot);
+            const key = `${record.date}-${normalizedSlot}`;
+
             if (!sessions[key]) {
                 sessions[key] = {
                     date: record.date,
@@ -42,22 +44,34 @@ const ClassManager = () => {
                     present: 0,
                     absent: 0,
                     total: 0,
-                    timestamp: record.timestamp || record.$createdAt
+                    timestamp: record.timestamp || record.$createdAt,
+                    studentLatestStatus: {} // { [studentId]: { status, timestamp } }
                 };
             }
 
-            // Robust status identification
-            const status = String(record.status || '').trim().toLowerCase();
-            if (status === 'present' || status === 'p' || status.includes('present')) {
-                sessions[key].present++;
-            } else if (status === 'absent' || status === 'a' || status.includes('absent') || status === '') {
-                sessions[key].absent++;
-            } else {
-                // Any other unknown status is treated as absent for the summary counter
-                sessions[key].absent++;
-            }
+            const studentId = record.studentId;
+            const currentTimestamp = new Date(record.timestamp || record.$createdAt).getTime();
+            const existing = sessions[key].studentLatestStatus[studentId];
 
-            sessions[key].total++;
+            // Only update if this record is newer or we don't have one for this student yet
+            if (!existing || currentTimestamp > existing.timestamp) {
+                sessions[key].studentLatestStatus[studentId] = {
+                    status: String(record.status || '').trim().toLowerCase(),
+                    timestamp: currentTimestamp
+                };
+            }
+        });
+
+        // Calculate final counts from the latest status of each student
+        Object.values(sessions).forEach(session => {
+            Object.values(session.studentLatestStatus).forEach(data => {
+                if (data.status === 'present' || data.status === 'p' || data.status.includes('present')) {
+                    session.present++;
+                } else {
+                    session.absent++;
+                }
+                session.total++;
+            });
         });
 
         return Object.values(sessions).sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -65,12 +79,23 @@ const ClassManager = () => {
 
     const getSessionDetails = (classId, date, timeSlot) => {
         const targetNorm = normalizeSlot(timeSlot);
-        const records = attendance.filter(a =>
+        const rawRecords = attendance.filter(a =>
             a.classId === classId &&
             a.date === date &&
             (normalizeSlot(a.timeSlot) === targetNorm || (!a.timeSlot && targetNorm === normalizeSlot('All Day')))
         );
-        return records.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        // Deduplicate: Keep only the latest record for each student
+        const latestPerStudent = {};
+        rawRecords.forEach(record => {
+            const studentId = record.studentId;
+            const currentTimestamp = new Date(record.timestamp || record.$createdAt).getTime();
+            if (!latestPerStudent[studentId] || currentTimestamp > latestPerStudent[studentId]._ts) {
+                latestPerStudent[studentId] = { ...record, _ts: currentTimestamp };
+            }
+        });
+
+        return Object.values(latestPerStudent).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     };
 
     if (viewingSession) {
