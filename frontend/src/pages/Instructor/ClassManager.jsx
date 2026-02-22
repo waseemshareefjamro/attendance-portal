@@ -48,9 +48,16 @@ const ClassManager = () => {
                     timestamp: record.timestamp || record.$createdAt
                 };
             }
-            const status = String(record.status || '').toLowerCase();
-            if (status === 'present') sessions[key].present++;
-            else if (status === 'absent') sessions[key].absent++;
+            const status = String(record.status || '').trim().toLowerCase();
+            if (status === 'present' || status === 'p') {
+                sessions[key].present++;
+            } else if (status === 'absent' || status === 'a') {
+                sessions[key].absent++;
+            } else if (status) {
+                // If there's any other status, treat as absent for now or at least count it somewhere
+                // For this app, let's assume anything not present is absent to be safe
+                sessions[key].absent++;
+            }
 
             sessions[key].total++;
         });

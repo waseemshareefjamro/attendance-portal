@@ -64,7 +64,7 @@ const AttendanceManager = () => {
         const totalMinutes = (durationHours * 60) + durationMinutes;
         if (totalMinutes > 0) {
             const endM = startM + totalMinutes;
-            const fullSlot = `${formatTime(startH, startM)} - ${formatTime(startH, endM)} (Full Class)`;
+            const fullSlot = `${formatTime(startH, startM)} to ${formatTime(startH, endM)} (Full Class)`;
             slots.push(fullSlot);
         }
 
@@ -88,7 +88,7 @@ const AttendanceManager = () => {
                 const eH = Math.floor(endTimestamp / 60);
                 const eM = endTimestamp % 60;
 
-                subSlots.push(`${formatTime(sH, sM)} - ${formatTime(eH, eM)}`);
+                subSlots.push(`${formatTime(sH, sM)} to ${formatTime(eH, eM)}`);
 
                 currentTotalM += chunk;
                 timeLeft -= chunk;
@@ -114,7 +114,7 @@ const AttendanceManager = () => {
     // Handle initial state parsing for edit
     useEffect(() => {
         if (editState.timeSlot) {
-            // "03:30 PM - 04:30 PM (Full Class)" -> Extract start
+            // Check for both " - " and " to " formats for compatibility
             const match = editState.timeSlot.match(/(\d+):(\d+)\s(AM|PM)/);
             if (match) {
                 setHour(match[1].padStart(2, '0'));
