@@ -52,7 +52,7 @@ const AttendanceManager = () => {
             const p = h >= 12 ? 'PM' : 'AM';
             const showH = h % 12 || 12;
             const showM = m.toString().padStart(2, '0');
-            return `${showH}:${showM} ${p}`;
+            return `${showH},${showM} ${p}`;
         };
 
         let startH = parseInt(hour);
@@ -64,7 +64,7 @@ const AttendanceManager = () => {
         const totalMinutes = (durationHours * 60) + durationMinutes;
         if (totalMinutes > 0) {
             const endM = startM + totalMinutes;
-            const fullSlot = `${formatTime(startH, startM)} to ${formatTime(startH, endM)} (Full Class)`;
+            const fullSlot = `${formatTime(startH, startM)} to ${formatTime(startH, endM)}`;
             slots.push(fullSlot);
         }
 
@@ -114,8 +114,8 @@ const AttendanceManager = () => {
     // Handle initial state parsing for edit
     useEffect(() => {
         if (editState.timeSlot) {
-            // Check for both " - " and " to " formats for compatibility
-            const match = editState.timeSlot.match(/(\d+):(\d+)\s(AM|PM)/);
+            // Flexible match for "HH,MM AM" or "HH:MM AM" pattern
+            const match = String(editState.timeSlot).match(/(\d+)[,:](\d+)\s*(AM|PM)/i);
             if (match) {
                 setHour(match[1].padStart(2, '0'));
                 setMinute(match[2].padStart(2, '0'));
@@ -326,13 +326,13 @@ const AttendanceManager = () => {
                                             <div className="flex justify-center gap-4">
                                                 <button
                                                     onClick={() => handleStatusChange(student.StudentID, 'Present')}
-                                                    className={`flex items-center gap-1 rounded-full px-3 py-1 transition-all ${status === 'Present' ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'}`}
+                                                    className={`flex items-center gap-1 rounded-full px-3 py-1 transition-all ${String(status).toLowerCase() === 'present' ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'}`}
                                                 >
                                                     <CheckCircle size={16} /> Present
                                                 </button>
                                                 <button
                                                     onClick={() => handleStatusChange(student.StudentID, 'Absent')}
-                                                    className={`flex items-center gap-1 rounded-full px-3 py-1 transition-all ${status === 'Absent' ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'}`}
+                                                    className={`flex items-center gap-1 rounded-full px-3 py-1 transition-all ${String(status).toLowerCase() === 'absent' ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'}`}
                                                 >
                                                     <XCircle size={16} /> Absent
                                                 </button>

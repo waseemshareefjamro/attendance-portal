@@ -15,12 +15,7 @@ const ClassManager = () => {
     const formatDate = (dateStr) => {
         if (!dateStr) return 'N/A';
         try {
-            // Check if it's already a simple YYYY-MM-DD
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                const [y, m, d] = dateStr.split('-');
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                return `${d} ${monthNames[parseInt(m) - 1]} ${y}`;
-            }
+            // Flexible parsing for YYYY-MM-DD or ISO
             const date = new Date(dateStr);
             if (isNaN(date.getTime())) return dateStr;
             return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -32,8 +27,6 @@ const ClassManager = () => {
     // Get stats for the viewing class
     const getClassHistory = (classId) => {
         const classRecords = attendance.filter(a => a.classId === classId);
-
-        // Group by Date + TimeSlot unique session
         const sessions = {};
 
         classRecords.forEach(record => {
@@ -48,21 +41,19 @@ const ClassManager = () => {
                     timestamp: record.timestamp || record.$createdAt
                 };
             }
+
+            // Robust status identification
             const status = String(record.status || '').trim().toLowerCase();
             if (status === 'present' || status === 'p') {
                 sessions[key].present++;
-            } else if (status === 'absent' || status === 'a') {
-                sessions[key].absent++;
-            } else if (status) {
-                // If there's any other status, treat as absent for now or at least count it somewhere
-                // For this app, let's assume anything not present is absent to be safe
+            } else {
+                // Any status that isn't 'present' counts as absent for the summary
                 sessions[key].absent++;
             }
 
             sessions[key].total++;
         });
 
-        // Convert to array and sort by date descending (Current -> Initial)
         return Object.values(sessions).sort((a, b) => new Date(b.date) - new Date(a.date));
     };
 
