@@ -203,7 +203,14 @@ export const AppProvider = ({ children }) => {
     const deleteAttendanceBatch = async (docIds) => {
         try {
             for (const id of docIds) {
-                await api.deleteAttendance(id);
+                try {
+                    await api.deleteAttendance(id);
+                } catch (err) {
+                    // Ignore if document is already gone
+                    if (!String(err.message).toLowerCase().includes('not found')) {
+                        throw err;
+                    }
+                }
             }
             await fetchData();
             return true;

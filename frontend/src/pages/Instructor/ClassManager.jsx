@@ -104,7 +104,14 @@ const ClassManager = () => {
             return;
         }
 
-        const sessionRecords = getSessionDetails(viewingClassId, date, timeSlot);
+        // Target ALL records for this session (date + normalized slot) for complete cleanup
+        const targetNorm = normalizeSlot(timeSlot);
+        const sessionRecords = attendance.filter(a =>
+            a.classId === viewingClassId &&
+            a.date === date &&
+            normalizeSlot(a.timeSlot) === targetNorm
+        );
+
         const docIds = sessionRecords.map(r => r.$id);
 
         if (docIds.length === 0) {
