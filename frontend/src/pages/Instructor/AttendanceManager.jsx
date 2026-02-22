@@ -34,6 +34,9 @@ const AttendanceManager = () => {
     const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.Username || c.instructorId === currentUser?.data?.username);
     const selectedClass = classes.find(c => c.id === selectedClassId);
 
+    // Aggressive normalization to match time slots across format changes
+    const normalizeSlot = (slot) => String(slot || '').toLowerCase().replace(/to/g, '').replace(/\(full class\)/g, '').replace(/[^a-z0-9]/g, '');
+
     // Get students from enrollments
     const classStudents = selectedClassId ? getStudentsByClass(selectedClassId) : [];
 
@@ -97,19 +100,27 @@ const AttendanceManager = () => {
             slots.push(...subSlots);
         }
 
+        // 3. Inject editState.timeSlot if not present (backward compatibility for old formats)
+        if (editState.timeSlot && !slots.some(s => normalizeSlot(s) === normalizeSlot(editState.timeSlot))) {
+            slots.push(editState.timeSlot);
+        }
+
         return slots;
-    }, [hour, minute, period, durationHours, durationMinutes]);
+    }, [hour, minute, period, durationHours, durationMinutes, editState.timeSlot]);
 
     // Auto-select first slot or handled edit state
     useEffect(() => {
         if (timeSlots.length > 0) {
-            if (editState.timeSlot && timeSlots.includes(editState.timeSlot)) {
-                setSelectedTimeSlot(editState.timeSlot);
-            } else if (!timeSlots.includes(selectedTimeSlot)) {
+            const target = editState.timeSlot || selectedTimeSlot;
+            const match = timeSlots.find(s => normalizeSlot(s) === normalizeSlot(target));
+
+            if (match) {
+                setSelectedTimeSlot(match);
+            } else if (!selectedTimeSlot && timeSlots.length > 0) {
                 setSelectedTimeSlot(timeSlots[0]);
             }
         }
-    }, [timeSlots, selectedTimeSlot, editState.timeSlot]);
+    }, [timeSlots, editState.timeSlot]);
 
     // Handle initial state parsing for edit
     useEffect(() => {
@@ -128,10 +139,11 @@ const AttendanceManager = () => {
     React.useEffect(() => {
         if (!selectedClassId || !date || !selectedTimeSlot) return;
 
+        const targetNorm = normalizeSlot(selectedTimeSlot);
         const existingRecords = attendance.filter(a =>
             a.classId === selectedClassId &&
             a.date === date &&
-            a.timeSlot === selectedTimeSlot
+            normalizeSlot(a.timeSlot) === targetNorm
         );
 
         if (existingRecords.length > 0) {

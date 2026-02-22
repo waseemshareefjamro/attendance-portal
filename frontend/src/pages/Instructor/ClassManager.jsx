@@ -8,6 +8,9 @@ const ClassManager = () => {
     const [viewingClassId, setViewingClassId] = useState(null);
     const [viewingSession, setViewingSession] = useState(null); // { date, timeSlot }
 
+    // Aggressive normalization to match time slots across format changes
+    const normalizeSlot = (slot) => String(slot || '').toLowerCase().replace(/to/g, '').replace(/\(full class\)/g, '').replace(/[^a-z0-9]/g, '');
+
     // Filter classes for this instructor
     const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.Username || c.instructorId === currentUser?.data?.username);
 
@@ -30,10 +33,8 @@ const ClassManager = () => {
         const sessions = {};
 
         classRecords.forEach(record => {
-            // Normalize timeSlot for grouping to handle format changes (colon vs comma)
-            const normalizedSlot = String(record.timeSlot || 'All Day').replace(/[,:]/g, ':').trim().toLowerCase();
-            const key = `${record.date}-${normalizedSlot}`;
-
+            // Aggressive normalization for session grouping
+            const key = `${record.date}-${normalizeSlot(record.timeSlot)}`;
             if (!sessions[key]) {
                 sessions[key] = {
                     date: record.date,
@@ -63,10 +64,11 @@ const ClassManager = () => {
     };
 
     const getSessionDetails = (classId, date, timeSlot) => {
+        const targetNorm = normalizeSlot(timeSlot);
         const records = attendance.filter(a =>
             a.classId === classId &&
             a.date === date &&
-            (a.timeSlot === timeSlot || (!a.timeSlot && timeSlot === 'All Day'))
+            (normalizeSlot(a.timeSlot) === targetNorm || (!a.timeSlot && targetNorm === normalizeSlot('All Day')))
         );
         return records.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     };
