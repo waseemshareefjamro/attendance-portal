@@ -200,6 +200,20 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    const deleteAttendanceBatch = async (docIds) => {
+        try {
+            for (const id of docIds) {
+                await api.deleteAttendance(id);
+            }
+            await fetchData();
+            return true;
+        } catch (error) {
+            console.error(error);
+            alert("Failed to delete some records: " + error.message);
+            return false;
+        }
+    };
+
     // Course Management (Super Admin)
     const addCourse = async (course) => {
         try {
@@ -322,7 +336,7 @@ export const AppProvider = ({ children }) => {
             students, enrollments, attendance, classes, instructors, currentUser, loading, serverStatus,
             addStudent, addStudentsBulk, updateStudent, removeStudentRaw,
             enrollStudent, unenrollStudent, getStudentsByClass, getClassesByStudent,
-            markAttendance, markAttendanceBulk, updateAttendanceBulk, addClass, addCourse, updateCourse, removeCourse, addInstructor, updateInstructor, removeInstructor,
+            markAttendance, markAttendanceBulk, updateAttendanceBulk, deleteAttendanceBatch, addClass, addCourse, updateCourse, removeCourse, addInstructor, updateInstructor, removeInstructor,
             loginStudent, loginInstructor, loginSuperAdmin, logout,
             generateCredential, generateStudentId
         }}>

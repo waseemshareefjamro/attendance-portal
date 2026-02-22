@@ -173,6 +173,9 @@ export const appwriteService = {
         // We only really need to update status for attendance
         return await databases.updateDocument(DATABASE_ID, COLLECTIONS.ATTENDANCE, documentId, normalized);
     },
+    deleteAttendance: async (documentId) => {
+        return await databases.deleteDocument(DATABASE_ID, COLLECTIONS.ATTENDANCE, documentId);
+    },
 
     // 7. Auth Logic (Database-based to match existing no-email setup)
     loginStudent: async (studentId, password) => {

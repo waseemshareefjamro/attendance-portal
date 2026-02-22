@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
+import { Trash2 } from 'lucide-react';
 
 const ClassManager = () => {
-    const { classes, currentUser, attendance } = useApp();
+    const { classes, currentUser, attendance, deleteAttendanceBatch } = useApp();
     const navigate = useNavigate();
     const [viewingClassId, setViewingClassId] = useState(null);
     const [viewingSession, setViewingSession] = useState(null); // { date, timeSlot }
@@ -96,6 +97,25 @@ const ClassManager = () => {
         });
 
         return Object.values(latestPerStudent).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    };
+
+    const handleDeleteSession = async (date, timeSlot) => {
+        if (!window.confirm(`Are you sure you want to delete the entire attendance session for ${formatDate(date)} at ${timeSlot}? This cannot be undone.`)) {
+            return;
+        }
+
+        const sessionRecords = getSessionDetails(viewingClassId, date, timeSlot);
+        const docIds = sessionRecords.map(r => r.$id);
+
+        if (docIds.length === 0) {
+            alert("No records found to delete.");
+            return;
+        }
+
+        const success = await deleteAttendanceBatch(docIds);
+        if (success) {
+            alert("✅ Session deleted successfully.");
+        }
     };
 
     if (viewingSession) {
@@ -210,6 +230,16 @@ const ClassManager = () => {
                                             <span className="text-blue-400 text-xs font-bold">
                                                 View Details →
                                             </span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteSession(session.date, session.timeSlot);
+                                                }}
+                                                className="text-red-500 hover:text-red-400 p-1 rounded-lg hover:bg-white/10 transition-colors"
+                                                title="Delete Entire Session"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
