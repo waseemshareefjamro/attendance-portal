@@ -9,7 +9,7 @@ const ClassManager = () => {
     const [viewingSession, setViewingSession] = useState(null); // { date, timeSlot }
 
     // Filter classes for this instructor
-    const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.username);
+    const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.Username || c.instructorId === currentUser?.data?.username);
 
     // Get stats for the viewing class
     const getClassHistory = (classId) => {

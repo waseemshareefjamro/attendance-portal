@@ -31,7 +31,7 @@ const AttendanceManager = () => {
     const [isEditing, setIsEditing] = useState(false);
 
     // Filter classes for this instructor
-    const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.username);
+    const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.Username || c.instructorId === currentUser?.data?.username);
     const selectedClass = classes.find(c => c.id === selectedClassId);
 
     // Get students from enrollments
@@ -39,7 +39,6 @@ const AttendanceManager = () => {
 
     // Generate Time Slots based on Start Time + Duration
     const timeSlots = React.useMemo(() => {
-        if (!startTime) return [];
         const slots = [];
 
         // Helper to format time

@@ -6,7 +6,7 @@ const Dashboard = () => {
     const { classes, attendance, currentUser, getStudentsByClass } = useApp();
 
     // Filter data for this instructor
-    const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.username);
+    const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.Username || c.instructorId === currentUser?.data?.username);
     const myClassIds = myClasses.map(c => c.id);
 
     // Calculate unique students for this instructor
