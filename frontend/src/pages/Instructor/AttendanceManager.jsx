@@ -173,8 +173,7 @@ const AttendanceManager = () => {
                 className: selectedClass?.name,
                 date: date,
                 timeSlot: selectedTimeSlot,
-                status: attendanceMap[student.StudentID] || 'Present',
-                timestamp: new Date().toISOString()
+                status: attendanceMap[student.StudentID] || 'Present'
             }));
 
             const success = await updateAttendanceBulk(records);

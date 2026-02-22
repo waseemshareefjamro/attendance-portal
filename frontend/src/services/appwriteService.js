@@ -148,7 +148,7 @@ export const appwriteService = {
             timeSlot: doc.timeSlot,
             status: doc.status,
             name: doc.name,
-            timestamp: doc.timestamp
+            timestamp: doc.timestamp || doc.$createdAt
         }));
     },
     markAttendance: async (record) => {
@@ -159,17 +159,15 @@ export const appwriteService = {
             date: record.date,
             timeSlot: record.timeSlot,
             status: record.status,
-            timestamp: record.timestamp || new Date().toISOString(),
             name: record.name || record.Name
         };
         return await databases.createDocument(DATABASE_ID, COLLECTIONS.ATTENDANCE, ID.unique(), normalized);
     },
     updateAttendance: async (documentId, updatedData) => {
         const normalized = {
-            status: updatedData.status,
-            timestamp: updatedData.timestamp || new Date().toISOString()
+            status: updatedData.status
         };
-        // We only really need to update status and timestamp for attendance
+        // We only really need to update status for attendance
         return await databases.updateDocument(DATABASE_ID, COLLECTIONS.ATTENDANCE, documentId, normalized);
     },
 
