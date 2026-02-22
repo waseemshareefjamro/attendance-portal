@@ -138,7 +138,10 @@ export const appwriteService = {
 
     // 6. Attendance
     getAttendance: async () => {
-        const response = await databases.listDocuments(DATABASE_ID, COLLECTIONS.ATTENDANCE);
+        const response = await databases.listDocuments(DATABASE_ID, COLLECTIONS.ATTENDANCE, [
+            Query.orderDesc('$createdAt'),
+            Query.limit(100)
+        ]);
         return response.documents.map(doc => ({
             ...doc,
             studentId: doc.studentId,

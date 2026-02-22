@@ -52,7 +52,7 @@ const AttendanceManager = () => {
             const p = h >= 12 ? 'PM' : 'AM';
             const showH = h % 12 || 12;
             const showM = m.toString().padStart(2, '0');
-            return `${showH},${showM} ${p}`;
+            return `${showH}, ${showM} ${p}`;
         };
 
         let startH = parseInt(hour);

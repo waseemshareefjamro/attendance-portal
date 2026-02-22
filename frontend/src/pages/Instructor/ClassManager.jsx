@@ -30,7 +30,10 @@ const ClassManager = () => {
         const sessions = {};
 
         classRecords.forEach(record => {
-            const key = `${record.date}-${record.timeSlot || 'default'}`;
+            // Normalize timeSlot for grouping to handle format changes (colon vs comma)
+            const normalizedSlot = String(record.timeSlot || 'All Day').replace(/[,:]/g, ':').trim().toLowerCase();
+            const key = `${record.date}-${normalizedSlot}`;
+
             if (!sessions[key]) {
                 sessions[key] = {
                     date: record.date,
@@ -44,10 +47,12 @@ const ClassManager = () => {
 
             // Robust status identification
             const status = String(record.status || '').trim().toLowerCase();
-            if (status === 'present' || status === 'p') {
+            if (status === 'present' || status === 'p' || status.includes('present')) {
                 sessions[key].present++;
+            } else if (status === 'absent' || status === 'a' || status.includes('absent') || status === '') {
+                sessions[key].absent++;
             } else {
-                // Any status that isn't 'present' counts as absent for the summary
+                // Any other unknown status is treated as absent for the summary counter
                 sessions[key].absent++;
             }
 
