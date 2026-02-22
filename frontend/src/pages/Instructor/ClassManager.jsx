@@ -11,6 +11,24 @@ const ClassManager = () => {
     // Filter classes for this instructor
     const myClasses = classes.filter(c => c.instructorId === currentUser?.data?.Username || c.instructorId === currentUser?.data?.username);
 
+    // Helper to format date
+    const formatDate = (dateStr) => {
+        if (!dateStr) return 'N/A';
+        try {
+            // Check if it's already a simple YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                const [y, m, d] = dateStr.split('-');
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${d} ${monthNames[parseInt(m) - 1]} ${y}`;
+            }
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch (e) {
+            return dateStr;
+        }
+    };
+
     // Get stats for the viewing class
     const getClassHistory = (classId) => {
         const classRecords = attendance.filter(a => a.classId === classId);
@@ -27,12 +45,13 @@ const ClassManager = () => {
                     present: 0,
                     absent: 0,
                     total: 0,
-                    timestamp: record.timestamp,
-                    records: [] // Store simplified records for drill-down check if needed, though we can filter later
+                    timestamp: record.timestamp || record.$createdAt
                 };
             }
-            if (record.status === 'Present') sessions[key].present++;
-            else sessions[key].absent++;
+            const status = String(record.status || '').toLowerCase();
+            if (status === 'present') sessions[key].present++;
+            else if (status === 'absent') sessions[key].absent++;
+
             sessions[key].total++;
         });
 
@@ -65,7 +84,7 @@ const ClassManager = () => {
                     <div>
                         <h1 className="text-3xl font-bold text-white">{selectedClass?.name}</h1>
                         <p className="text-gray-400">
-                            {viewingSession.date} • <span className="text-blue-400">{viewingSession.timeSlot}</span>
+                            {formatDate(viewingSession.date)} • <span className="text-blue-400">{viewingSession.timeSlot}</span>
                         </p>
                     </div>
                 </header>
@@ -137,7 +156,7 @@ const ClassManager = () => {
                                         onClick={() => setViewingSession({ date: session.date, timeSlot: session.timeSlot })}
                                         className="hover:bg-white/5 transition-colors cursor-pointer group"
                                     >
-                                        <td className="px-6 py-4 font-medium text-white">{session.date}</td>
+                                        <td className="px-6 py-4 font-medium text-white">{formatDate(session.date)}</td>
                                         <td className="px-6 py-4">{session.timeSlot}</td>
                                         <td className="px-6 py-4 text-center text-green-400 font-bold">{session.present}</td>
                                         <td className="px-6 py-4 text-center text-red-400 font-bold">{session.absent}</td>
